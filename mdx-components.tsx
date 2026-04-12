@@ -6,6 +6,7 @@ import { Columns } from './components/Columns';
 import { Diagram } from './components/Diagram';
 import { Embed } from './components/Embed';
 import { Logo } from './components/Logo';
+import { Video } from './components/Video';
 import { SectionSlide } from './components/SectionSlide';
 import { SpeakerNotes } from './components/SpeakerNotes';
 import { TitleSlide } from './components/TitleSlide';
@@ -49,5 +50,6 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     Logo,
     SpeakerNotes,
     Diagram,
+    Video,
   };
 }

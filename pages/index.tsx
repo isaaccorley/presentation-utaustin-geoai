@@ -10,7 +10,7 @@ export default function IndexPage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/decks/introducing-research-decks');
+    router.replace('/decks/utaustin-geoai');
   }, [router]);
 
   return (

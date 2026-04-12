@@ -28,3 +28,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# manim build artifacts
+video/media/
+video/__pycache__/
+video/frames/

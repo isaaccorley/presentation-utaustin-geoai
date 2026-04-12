@@ -1,0 +1,498 @@
+export const meta = {
+  title: 'GeoAI & Cloud-Native Geospatial',
+}
+
+<TitleSlide
+  title="GeoAI & Cloud-Native Geospatial"
+  subtitle="Building Tools with AI Coding Agents"
+  author="Isaac Corley — Taylor Geospatial"
+  date="UT Austin · April 2026"
+/>
+
+---
+
+<Columns cols={2} gap={5} align="center">
+<div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+
+<img
+  src="/images/headshot.webp"
+  alt="Isaac Corley"
+  style={{ width: 280, height: 320, borderRadius: 8, objectFit: 'cover', objectPosition: 'center top' }}
+/>
+
+</div>
+<div>
+
+## Isaac Corley
+
+**Director of AI/ML Research** — Taylor Geospatial
+
+- Core maintainer of **TorchGeo** & **SMP**
+- Ph.D. Electrical Engineering — ML, CV, remote sensing
+- Building cloud-native geospatial AI tools
+
+</div>
+</Columns>
+
+---
+
+# Agenda
+
+- **Cloud-Native Geospatial Ecosystem** — the formats and data that changed everything
+- **GeoAI: What's Out There** — foundation models, tooling, inference
+- **Building with Claude & Codex** — AI coding agents as daily drivers
+- **Live Demos** — geospatialml.com, Terrabit
+- **GeoAI Pipelines** — how it all works under the hood
+- **Takeaways** — what to remember and where to go next
+
+<SpeakerNotes>
+Keep the agenda high-level. Each section maps to 4-6 slides.
+The goal is to connect cloud-native data infrastructure to GeoAI workflows
+and show how AI coding agents accelerate the whole process.
+</SpeakerNotes>
+
+---
+
+<SectionSlide backgroundImage="/images/landsat-brown-1.jpg" kicker="Section 01">
+
+## Cloud-Native Geospatial Ecosystem
+
+</SectionSlide>
+
+---
+
+<Columns cols={2} gap={5}>
+<div>
+
+## The Old Way
+
+**Traditional SDI**
+
+- Centralized servers & databases
+- WMS / WFS / WMTS protocols
+- Government-centered, siloed
+- Fragile — one server down = data gone
+- Download entire files to use a single tile
+
+</div>
+<div>
+
+## The New Way
+
+**Cloud-Native**
+
+- Object storage (S3, GCS, Azure Blob)
+- HTTP range requests — read only what you need
+- Streamable, composable, interoperable
+- Ecosystem-driven (open specs, open data)
+- No servers required — just URLs
+
+</div>
+</Columns>
+
+<SpeakerNotes>
+The shift from traditional SDI to cloud-native geospatial is as fundamental
+as the shift from FTP to the web. The key insight: data should be accessible
+via simple HTTP requests, not locked behind proprietary services.
+</SpeakerNotes>
+
+---
+
+# The Cloud-Native Geospatial Stack
+
+| Format | What It Does | Key Feature |
+|--------|-------------|-------------|
+| **COG** | Cloud-Optimized GeoTIFF | Raster imagery via HTTP range reads |
+| **STAC** | SpatioTemporal Asset Catalog | Metadata search & discovery |
+| **GeoParquet** | Vector data at scale | Columnar, now in core Parquet spec |
+| **Zarr** | Multidimensional arrays | Weather, climate, time series |
+| **PMTiles** | Serverless vector/raster tiles | Single-file archive, no tile server |
+| **COPC** | Cloud-Optimized Point Clouds | LiDAR data via HTTP range reads |
+
+<SpeakerNotes>
+Reference Chris Holmes' "Towards a Global Spatial Data Ecosystem" — this stack
+already exists and is production-ready. COGs are the workhorse for imagery,
+STAC is the catalog layer, GeoParquet handles vector at scale, Zarr covers
+n-dimensional data, PMTiles eliminates tile servers, and COPC does for point
+clouds what COG did for rasters.
+</SpeakerNotes>
+
+---
+
+# The Ecosystem Already Exists
+
+- **2.6 billion buildings** — Overture Maps Foundation
+- **119 million field boundaries** — Fields of The World (FTW)
+- **100+ million places** — Overture Maps
+- **Petabytes of weather & climate data** — ERA5, CMIP6 in Zarr
+- **Trillions of point cloud points** — USGS 3DEP, national surveys
+- **Hundreds of millions of embeddings** — Clay, SatCLIP, GeoCLIP
+
+> All streamable directly from object storage. No servers needed.
+
+<SpeakerNotes>
+This is the punchline of the cloud-native section: the data is already there,
+already in cloud-native formats, already accessible. The infrastructure problem
+is largely solved — now we need better tools to use it.
+</SpeakerNotes>
+
+---
+
+<Video src="/videos/S01_CloudNativeStack.mp4" />
+
+---
+
+<SectionSlide backgroundImage="/images/landsat-brown-2.jpg" kicker="Section 02">
+
+## GeoAI — What's Out There
+
+</SectionSlide>
+
+---
+
+<Columns cols={2} gap={5}>
+<div>
+
+## Foundation Models for EO
+
+- **Prithvi** — IBM / NASA, multitemporal
+- **Clay** — open foundation model
+- **SatMAE** — masked autoencoder for satellite
+- **Scale-MAE** — scale-aware pretraining
+- **GFM** — general feature machine
+- **SatCLIP / GeoCLIP** — location encoders
+- **DOFA** — dynamic one-for-all
+- **Skysense** — multimodal EO FM
+
+</div>
+<div>
+
+## What They Enable
+
+- Zero/few-shot classification
+- Change detection without labeled pairs
+- Semantic segmentation with minimal labels
+- Cross-modal retrieval (text → satellite)
+- Location-aware embeddings for any coordinate
+- Transfer learning across sensors and resolutions
+
+> Trained on massive satellite imagery corpora — Sentinel-2, Landsat, NAIP, and more.
+
+</div>
+</Columns>
+
+<SpeakerNotes>
+The foundation model landscape for Earth observation is exploding. The key
+differentiator from natural image FMs: these models understand multispectral
+bands, temporal sequences, and geographic context. They're pretrained on
+petabytes of satellite data and can transfer to downstream tasks with minimal
+fine-tuning.
+</SpeakerNotes>
+
+---
+
+# The GeoAI Toolbox
+
+- **TorchGeo** — datasets, samplers, transforms for geospatial ML (PyTorch)
+- **SMP** (segmentation-models-pytorch) — encoder-decoder architectures for dense prediction
+- **Rasterio / GDAL** — raster I/O backbone, the bedrock of geospatial Python
+- **GeoPandas / DuckDB** — vector analysis at scale, SQL on GeoParquet
+- **Planetary Computer / Earth Engine** — data access APIs for petabyte archives
+
+> These tools compose naturally with cloud-native formats — read COGs with Rasterio, query STAC catalogs, analyze GeoParquet with DuckDB.
+
+<SpeakerNotes>
+TorchGeo and SMP are the two libraries I maintain. TorchGeo handles the
+geospatial-specific parts of ML (sampling, CRS alignment, multispectral data)
+while SMP provides the model architectures. Together with Rasterio for I/O
+and DuckDB for vector queries, you have a complete stack.
+</SpeakerNotes>
+
+---
+
+<Video src="/videos/S02_InferencePipeline.mp4" />
+
+---
+
+<SectionSlide backgroundImage="/images/landsat-brown-3.jpg" kicker="Section 03">
+
+## Building with Claude & Codex
+
+</SectionSlide>
+
+---
+
+# AI Coding Agents Changed Everything
+
+- **Claude Code + Codex** as daily drivers for building geo tools
+- Not just autocomplete — full autonomous task execution
+- Read your codebase, understand the stack, iterate until it works
+- "I built a production frontend in 3 days that would have taken me weeks"
+
+> The key: good prompts + domain knowledge + letting the agent iterate.
+
+<SpeakerNotes>
+This is the section where I talk about my personal experience. AI coding agents
+aren't replacing domain expertise — they're amplifying it. I still need to know
+what COGs are, how STAC works, what TorchGeo does. But I no longer need to
+hand-write every MapLibre callback or CSS grid layout.
+</SpeakerNotes>
+
+---
+
+# What I've Built with Claude
+
+- **geospatialml.com** — blog/resource site for Caleb Robinson, built entirely with Claude
+- **isaac.earth/terrabit** — binary earth embedding retrieval app, full frontend built with Claude in days
+- **rsim** — SAR-optical image registration benchmark + Manim presentation videos
+- **TorchGeo contributions** — dataset wrappers, fixes, documentation
+- **This presentation** — yes, these slides too
+
+> Each project: I provided the domain knowledge, Claude provided the execution velocity.
+
+<SpeakerNotes>
+geospatialml.com is a good example — Caleb described what he wanted, I used Claude
+to build it. The terrabit app is the most impressive: a full MapLibre globe frontend
+with DuckDB-WASM queries and embedding similarity search, all built in about 3 days
+of pairing with Claude Code.
+</SpeakerNotes>
+
+---
+
+# The Claude Workflow
+
+1. **Describe the goal** in natural language
+2. **Claude reads your codebase**, understands the stack
+3. **Iterates**: writes code → runs tests → fixes errors → repeats
+4. **You review**, steer, and ship
+
+> Domain expertise + AI execution = force multiplier
+
+<SpeakerNotes>
+The workflow is conversational but structured. I describe what I want at a high level,
+Claude proposes an implementation, I review and redirect, Claude iterates. The key
+insight is that you need to know enough to evaluate the output — AI agents don't
+replace expertise, they amplify it.
+</SpeakerNotes>
+
+---
+
+<SectionSlide kicker="Section 04">
+
+## Live Demos
+
+</SectionSlide>
+
+---
+
+<Embed src="https://geospatialml.com" clip />
+
+---
+
+<Embed src="https://isaac.earth/terrabit" clip />
+
+---
+
+<Columns cols={2} gap={5}>
+<div>
+
+## What Makes Terrabit Tick
+
+**Architecture**
+
+- COGs for imagery (HTTP range reads)
+- Binary embeddings stored as vectors
+- MapLibre GL JS globe frontend
+- DuckDB-WASM for in-browser queries
+- Serverless retrieval pipeline
+
+</div>
+<div>
+
+## The Claude Story
+
+Entire frontend built with **Claude Code** in ~3 days.
+
+I described the UX I wanted — Claude iterated on:
+
+- MapLibre globe rendering
+- DuckDB-WASM integration
+- Embedding similarity search UI
+- Result visualization on the globe
+
+> "I focused on the geospatial logic. Claude handled the frontend plumbing."
+
+</div>
+</Columns>
+
+<SpeakerNotes>
+Terrabit is a binary earth embedding retrieval app. You click a location on the globe,
+it encodes that location's satellite imagery into a binary embedding, then finds the
+most similar locations globally using Hamming distance. The entire frontend — globe
+rendering, query interface, result display — was built with Claude Code.
+</SpeakerNotes>
+
+---
+
+<SectionSlide backgroundImage="/images/landsat-brown-1.jpg" kicker="Section 05">
+
+## GeoAI Pipelines
+
+</SectionSlide>
+
+---
+
+# How GeoAI Models Process Large Scenes
+
+**The challenge:**
+
+- Satellite scenes are massive — 10,000+ x 10,000+ pixels
+- Models expect small tiles — 224x224 or 512x512
+- Need to tile, predict, reassemble
+- Handle overlaps, CRS alignment, nodata values
+- Output must be georeferenced — not just pixel arrays
+
+> This is where TorchGeo's GeoSampler abstraction shines.
+
+<SpeakerNotes>
+This is a fundamental challenge in geospatial ML that doesn't exist in natural
+image processing. A single Sentinel-2 scene is ~10980x10980 pixels across 13 bands.
+You can't feed that to a model — you need to tile it, run inference on each tile,
+and stitch the results back together with proper georeferencing.
+</SpeakerNotes>
+
+---
+
+<Video src="/videos/S03_TorchGeoSampling.mp4" />
+
+---
+
+# TorchGeo: The Training Pipeline
+
+```python
+from torchgeo.datasets import Sentinel2, EnviroAtlas
+from torchgeo.samplers import RandomGeoSampler
+from torch.utils.data import DataLoader
+
+# Intersection dataset: imagery + labels
+dataset = Sentinel2("data/") & EnviroAtlas("labels/")
+
+# Sample random 256x256 patches from the intersection
+sampler = RandomGeoSampler(dataset, size=256, length=1000)
+
+# Standard PyTorch DataLoader with geo-aware batching
+dataloader = DataLoader(dataset, sampler=sampler, batch_size=16)
+```
+
+<SpeakerNotes>
+TorchGeo's key innovation is treating geospatial data as continuous raster fields
+indexed by space and time, not discrete files. The ampersand operator creates an
+IntersectionDataset that only samples from areas where both imagery and labels exist.
+GeoSampler handles CRS alignment, resolution matching, and spatial indexing
+automatically. This is standard PyTorch — just with geospatial awareness built in.
+</SpeakerNotes>
+
+---
+
+<Video src="/videos/S04_EmbeddingRetrieval.mp4" />
+
+---
+
+<Columns cols={2} gap={5}>
+<div>
+
+## Inference at Scale
+
+**The Pattern**
+
+1. Sliding window over COG (HTTP range reads)
+2. Batch inference on GPU
+3. Write predictions as new COG or GeoParquet
+4. Register output in STAC catalog
+
+> Input is cloud-native. Output is cloud-native. No intermediate files on disk.
+
+</div>
+<div>
+
+## Cloud-Native Advantage
+
+- **No download needed** — process in place
+- **Stream only the tiles you need** — skip nodata regions
+- **Output is immediately accessible** — new COG, new STAC item
+- **Horizontal scaling** — partition by tile, run on multiple GPUs
+- **Reproducible** — input URLs + model version = deterministic pipeline
+
+</div>
+</Columns>
+
+<SpeakerNotes>
+The cloud-native advantage for inference is huge. Traditional workflows download
+entire scenes to disk, process them, then upload results. Cloud-native workflows
+read only the tiles they need via HTTP range requests, run inference, and write
+results directly to object storage. No intermediate I/O, no disk management.
+</SpeakerNotes>
+
+---
+
+<SectionSlide kicker="Section 06">
+
+## The Bigger Picture
+
+</SectionSlide>
+
+---
+
+# AI x Cloud-Native Geo = Virtuous Cycle
+
+- **Better data → better models → better tools → more data**
+- Active learning: human edits improve model training data
+- Common schemas (Overture, FTW) enable cross-dataset benchmarking
+- AI coding agents accelerate tool development (Claude, Codex)
+- Open formats mean anyone can contribute and consume
+
+> The flywheel is spinning. Cloud-native data makes AI training easier. AI makes cloud-native tools better. Repeat.
+
+<SpeakerNotes>
+This is the thesis of the talk: cloud-native geospatial and GeoAI aren't separate
+trends — they're a feedback loop. Better data accessibility makes it easier to train
+models. Better models produce better data products. Better tools (built faster with
+AI agents) make both more accessible.
+</SpeakerNotes>
+
+---
+
+# What's Next
+
+- **Multimodal foundation models** — SAR + optical + text in a single encoder
+- **Real-time inference** on streaming satellite data
+- **Autonomous geo-agents** — AI that can query, analyze, and visualize geospatial data end-to-end
+- **The spatial data ecosystem is the substrate** — AI is the catalyst
+- **Agentic workflows** — Claude reads a STAC catalog, writes the inference pipeline, deploys the results
+
+<SpeakerNotes>
+The future is agents that understand geospatial data natively. Imagine asking
+"show me all areas where vegetation declined more than 20% in the last year"
+and having an agent query STAC, load the right COGs, run a change detection model,
+and render the results on a globe — all autonomously.
+</SpeakerNotes>
+
+---
+
+# Takeaways
+
+1. **Cloud-native formats are the foundation** — COGs, STAC, GeoParquet, Zarr make data accessible without servers
+2. **GeoAI tools are mature** — TorchGeo, SMP, foundation models are ready for production
+3. **AI coding agents are a force multiplier** — build in days what took weeks
+4. **The ecosystem is what matters** — contribute, share, iterate
+
+> The best time to build geospatial AI tools was yesterday. The second best time is now — and you have better agents to help.
+
+---
+
+<TitleSlide
+  title="Thank You"
+  subtitle="Questions?"
+  author="Isaac Corley · isaac.earth · @isaaccorley"
+  date="Taylor Geospatial"
+/>

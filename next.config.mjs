@@ -4,7 +4,7 @@ import remarkGfm from 'remark-gfm';
 // When deploying to GitHub Pages, PAGES_BASE_PATH is set to the repo name
 // (e.g. '/tg-slides-template'). During local dev, it's unset so everything
 // serves from the root.
-const basePath = process.env.PAGES_BASE_PATH || '';
+const basePath = process.env.PAGES_BASE_PATH || '/presentation-utaustin-geoai';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {

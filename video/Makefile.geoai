@@ -1,0 +1,17 @@
+# GeoAI Talk — Manim video pipeline
+QUALITY   ?= h
+SCRIPT    := geoai_scenes.py
+OUTDIR    := ../public/videos
+SCENES    := S01_CloudNativeStack S02_InferencePipeline S03_TorchGeoSampling S04_EmbeddingRetrieval
+
+.PHONY: build clean
+
+build: $(foreach s,$(SCENES),$(OUTDIR)/$(s).mp4)
+
+$(OUTDIR)/%.mp4: $(SCRIPT)
+	@mkdir -p $(OUTDIR)
+	manim render -q$(QUALITY) $(SCRIPT) $*
+	cp media/videos/geoai_scenes/1080p60/$*.mp4 $@
+
+clean:
+	rm -rf media __pycache__
