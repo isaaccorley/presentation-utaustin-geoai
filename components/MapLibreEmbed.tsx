@@ -5,8 +5,6 @@
  * Dark-themed to match TG brand. Flies to UT Austin campus on load.
  */
 
-import maplibregl from 'maplibre-gl';
-import * as pmtiles from 'pmtiles';
 import { useEffect, useRef } from 'react';
 
 const OVERTURE_BUILDINGS_URL =
@@ -14,80 +12,100 @@ const OVERTURE_BUILDINGS_URL =
 
 const UT_AUSTIN = { lng: -97.7365, lat: 30.2849 };
 
-// Register PMTiles protocol once at module level
-const protocol = new pmtiles.Protocol();
-maplibregl.addProtocol('pmtiles', protocol.tile);
+let protocolRegistered = false;
 
 export function MapLibreEmbed() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<maplibregl.Map | null>(null);
+  const mapRef = useRef<any>(null);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     if (!containerRef.current || mapRef.current) return;
 
-    const map = new maplibregl.Map({
-      container: containerRef.current,
-      style: {
-        version: 8,
-        glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
-        sources: {
-          buildings: {
-            type: 'vector',
-            url: `pmtiles://${OVERTURE_BUILDINGS_URL}`,
+    let map: any;
+    let cancelled = false;
+
+    (async () => {
+      const [maplibregl, pmtiles] = await Promise.all([
+        import('maplibre-gl'),
+        import('pmtiles'),
+      ]);
+
+      if (cancelled || !containerRef.current) return;
+
+      if (!protocolRegistered) {
+        const protocol = new pmtiles.Protocol();
+        maplibregl.default.addProtocol('pmtiles', protocol.tile);
+        protocolRegistered = true;
+      }
+
+      map = new maplibregl.default.Map({
+        container: containerRef.current,
+        style: {
+          version: 8,
+          glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+          sources: {
+            buildings: {
+              type: 'vector',
+              url: `pmtiles://${OVERTURE_BUILDINGS_URL}`,
+            },
           },
+          layers: [
+            {
+              id: 'background',
+              type: 'background',
+              paint: { 'background-color': '#1a0f0e' },
+            },
+            {
+              id: 'buildings-fill',
+              type: 'fill',
+              source: 'buildings',
+              'source-layer': 'building',
+              paint: {
+                'fill-color': '#80a0d8',
+                'fill-opacity': ['interpolate', ['linear'], ['zoom'], 10, 0.15, 14, 0.4, 17, 0.6],
+              },
+            },
+            {
+              id: 'buildings-outline',
+              type: 'line',
+              source: 'buildings',
+              'source-layer': 'building',
+              paint: {
+                'line-color': '#a7d0dc',
+                'line-width': ['interpolate', ['linear'], ['zoom'], 13, 0.2, 17, 0.8],
+                'line-opacity': ['interpolate', ['linear'], ['zoom'], 10, 0.1, 15, 0.4],
+              },
+            },
+          ],
         },
-        layers: [
-          {
-            id: 'background',
-            type: 'background',
-            paint: { 'background-color': '#1a0f0e' },
-          },
-          {
-            id: 'buildings-fill',
-            type: 'fill',
-            source: 'buildings',
-            'source-layer': 'building',
-            paint: {
-              'fill-color': '#80a0d8',
-              'fill-opacity': ['interpolate', ['linear'], ['zoom'], 10, 0.15, 14, 0.4, 17, 0.6],
-            },
-          },
-          {
-            id: 'buildings-outline',
-            type: 'line',
-            source: 'buildings',
-            'source-layer': 'building',
-            paint: {
-              'line-color': '#a7d0dc',
-              'line-width': ['interpolate', ['linear'], ['zoom'], 13, 0.2, 17, 0.8],
-              'line-opacity': ['interpolate', ['linear'], ['zoom'], 10, 0.1, 15, 0.4],
-            },
-          },
-        ],
-      },
-      center: [UT_AUSTIN.lng - 2, UT_AUSTIN.lat - 1],
-      zoom: 4,
-      maxZoom: 18,
-      attributionControl: false,
-    });
-
-    map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');
-    map.addControl(new maplibregl.NavigationControl(), 'top-right');
-
-    map.on('load', () => {
-      map.flyTo({
-        center: [UT_AUSTIN.lng, UT_AUSTIN.lat],
-        zoom: 15,
-        duration: 4000,
-        curve: 1.8,
+        center: [UT_AUSTIN.lng - 2, UT_AUSTIN.lat - 1],
+        zoom: 4,
+        maxZoom: 18,
+        attributionControl: false,
       });
-    });
 
-    mapRef.current = map;
+      map.addControl(new maplibregl.default.AttributionControl({ compact: true }), 'bottom-left');
+      map.addControl(new maplibregl.default.NavigationControl(), 'top-right');
+
+      map.on('load', () => {
+        map.flyTo({
+          center: [UT_AUSTIN.lng, UT_AUSTIN.lat],
+          zoom: 15,
+          duration: 4000,
+          curve: 1.8,
+        });
+      });
+
+      mapRef.current = map;
+    })();
 
     return () => {
-      map.remove();
-      mapRef.current = null;
+      cancelled = true;
+      if (map) {
+        map.remove();
+        mapRef.current = null;
+      }
     };
   }, []);
 

@@ -10,6 +10,8 @@ export interface ColumnsProps {
   children: ReactNode;
   /** Vertical alignment. Default: 'start' */
   align?: 'start' | 'center' | 'end' | 'stretch';
+  /** Custom grid-template-columns value (e.g. "2fr 3fr") */
+  ratio?: string;
 }
 
 /**
@@ -17,12 +19,12 @@ export interface ColumnsProps {
  * Each direct child becomes one column.
  * In MDX, wrap each column's content in a <div>.
  */
-export function Columns({ cols = 2, gap = 6, children, align = 'start' }: ColumnsProps) {
+export function Columns({ cols = 2, gap = 6, children, align = 'start', ratio }: ColumnsProps) {
   return (
     <div
       sx={{
         display: 'grid',
-        gridTemplateColumns: `repeat(${cols}, 1fr)`,
+        gridTemplateColumns: ratio || `repeat(${cols}, 1fr)`,
         gap,
         alignItems: align,
         width: '100%',

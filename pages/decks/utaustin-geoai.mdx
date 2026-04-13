@@ -57,7 +57,7 @@ interoperable, and built on open standards that work with the web.
 
 ---
 
-<Columns cols={2} gap={4} align="center">
+<Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
 <div>
 
 ## Old Way vs New Way
@@ -83,7 +83,7 @@ your AOI, then load. The new way: range-read just what you need.
 
 ---
 
-<Columns cols={2} gap={4} align="center">
+<Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
 <div>
 
 ## The Cloud-Native Stack
@@ -113,7 +113,7 @@ Zarr for multidimensional arrays, PMTiles for serverless tiles, COPC for point c
 
 ---
 
-<Columns cols={2} gap={4} align="center">
+<Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
 <div>
 
 ## A Decade of Cloud-Native Geo
@@ -142,7 +142,7 @@ on GitHub — community-driven standards that actually ship.
 
 ---
 
-<Columns cols={2} gap={4} align="center">
+<Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
 <div>
 
 ## How COGs Actually Work
@@ -169,7 +169,7 @@ headers becomes a tile server for free.
 
 ---
 
-<Columns cols={2} gap={4} align="center">
+<Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
 <div>
 
 ## Search Across Catalogs
@@ -212,7 +212,7 @@ Overture went from 785M to 2.6B buildings in under two years.
 
 ---
 
-<Columns cols={2} gap={4} align="center">
+<Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
 <div>
 
 ## GeoParquet at Scale
@@ -385,15 +385,13 @@ You can make out the stadium, major roads, and green spaces — but at 10m pixel
 
 ---
 
-# What Different Bands Reveal
-
 <Columns cols={2} gap={4} align="center">
 <div>
 
 <Img
   src="/images/utaustin-nir.png"
   alt="False color NIR composite of UT Austin campus"
-  style={{ width: '100%', borderRadius: 6 }}
+  style={{ width: '100%', maxHeight: '55vh', objectFit: 'contain', borderRadius: 6 }}
 />
 
 **False Color (NIR-R-G)** — vegetation appears bright red
@@ -404,7 +402,7 @@ You can make out the stadium, major roads, and green spaces — but at 10m pixel
 <Img
   src="/images/utaustin-ndvi.png"
   alt="NDVI map of UT Austin campus"
-  style={{ width: '100%', borderRadius: 6 }}
+  style={{ width: '100%', maxHeight: '55vh', objectFit: 'contain', borderRadius: 6 }}
 />
 
 **NDVI** — green = vegetation, brown = bare/built
@@ -455,7 +453,7 @@ At 1m you can see individual trees and rooftops.
 
 ---
 
-<SectionSlide backgroundVideo="/videos/S08_ContrastiveLearning.mp4" kicker="Section 02">
+<SectionSlide backgroundImage="/images/landsat-brown-2.jpg" kicker="Section 02">
 
 ## GeoAI — What's Out There
 
@@ -465,7 +463,7 @@ At 1m you can see individual trees and rooftops.
 
 # Foundation Models for Earth Observation
 
-<Columns cols={2} gap={4} align="center">
+<Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
 <div>
 
 8 models, 3 paradigms, no single winner.
@@ -602,7 +600,7 @@ different kinds of features — contrastive for retrieval, MAE for dense predict
 
 ---
 
-<Columns cols={2} gap={4} align="center">
+<Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
 <div>
 
 ## Contrastive Learning
@@ -621,7 +619,7 @@ The model learns a **similarity metric** without any labels.
 
 ---
 
-<Columns cols={2} gap={4} align="center">
+<Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
 <div>
 
 ## Masked Autoencoding
@@ -640,7 +638,7 @@ The model learns **spatial structure** by predicting what's missing — no label
 
 ---
 
-<Columns cols={2} gap={4} align="center">
+<Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
 <div>
 
 ## Pixel vs Patch Embeddings
@@ -670,8 +668,6 @@ semantics, better for classification and retrieval.
 
 # Pixel vs Patch Embeddings
 
-<div style={{ fontSize: '1.1em', margin: '0 auto', maxWidth: '90%' }}>
-
 | | **Pixel Embedding** | **Patch Embedding** |
 |---|---|---|
 | **Output shape** | One vector per pixel | One vector per patch (e.g. 16x16) |
@@ -680,33 +676,38 @@ semantics, better for classification and retrieval.
 | **Context window** | Narrow — local pixel neighborhood | Wide — entire patch context |
 | **Examples** | Presto, SatCLIP | SatMAE, Clay, DOFA, Prithvi |
 
-</div>
-
 > Most foundation models are moving toward **patch embeddings** with vision transformers — the spatial compression is worth the richer semantics.
 
 ---
 
-<Columns cols={2} gap={4} align="center">
+# The 80/20 Reality
+
+<div style={{ display: 'flex', width: '100%', height: 80, borderRadius: 12, overflow: 'hidden', marginBottom: 32 }}>
+  <div style={{ flex: 4, background: 'linear-gradient(135deg, #BE3E1F 0%, #C96A1E 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F4F4EB', fontWeight: 'bold', fontSize: '1.5em' }}>80% Pipeline</div>
+  <div style={{ flex: 1, background: 'linear-gradient(135deg, #1E5B46 0%, #4A6BA8 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F4F4EB', fontWeight: 'bold', fontSize: '1.2em' }}>20%</div>
+</div>
+
+<Columns cols={2} gap={5}>
 <div>
 
-## The 80/20 Reality
-
-The model gets all the attention — but the **pipeline** is where the real work lives.
-
-- Post-processing, merging, filtering
+**Pipeline (the real work)**
+- Post-processing & merging
 - Productionization & serving
 - Format conversion & tiling
 - Monitoring & iteration
 
-> **80% pipeline, 20% model.**
-
 </div>
 <div>
 
-<Video src="/videos/S17_EightyTwenty.mp4" title="80/20 — Model vs Pipeline" />
+**Model (the fun part)**
+- Architecture selection
+- Training & fine-tuning
+- Evaluation on benchmarks
 
 </div>
 </Columns>
+
+> The model gets all the attention — but the **pipeline** is 80% of the real work.
 
 <SpeakerNotes>
 Transition beat. The model gets all the attention but the pipeline —
@@ -715,7 +716,7 @@ post-processing, productionization, serving — is 80% of the real work.
 
 ---
 
-<SectionSlide backgroundVideo="/videos/S02_InferencePipeline.mp4" kicker="Section 03">
+<SectionSlide backgroundImage="/images/landsat-brown-3.jpg" kicker="Section 03">
 
 ## GeoAI Pipelines
 
@@ -723,7 +724,7 @@ post-processing, productionization, serving — is 80% of the real work.
 
 ---
 
-<Columns cols={2} gap={4} align="center">
+<Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
 <div>
 
 ## Inference at Scale
@@ -748,7 +749,7 @@ a model, and reassembled into a georeferenced output.
 
 ---
 
-<Columns cols={2} gap={4} align="center">
+<Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
 <div>
 
 ## TorchGeo GeoSampling
@@ -792,7 +793,7 @@ DataLoader — just with geospatial awareness built in.
 
 ---
 
-<Columns cols={2} gap={4} align="center">
+<Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
 <div>
 
 ## Embedding Retrieval
@@ -853,7 +854,7 @@ more complex approaches.
 
 ---
 
-<Columns cols={2} gap={4} align="center">
+<Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
 <div>
 
 ## PRUE Pipeline
@@ -918,7 +919,7 @@ other 80% that make it actually usable.
 
 ---
 
-<Columns cols={2} gap={4} align="center">
+<Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
 <div>
 
 ## After Inference
@@ -1083,7 +1084,7 @@ type checking) and ships with CI that runs on every push. Fork it and go.
 
 ---
 
-<Columns cols={2} gap={4} align="center">
+<Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
 <div>
 
 ## The Flywheel

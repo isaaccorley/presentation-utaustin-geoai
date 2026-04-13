@@ -93,7 +93,7 @@ const theme: Theme = {
     h1: {
       fontFamily: 'heading',
       fontWeight: 'heading',
-      fontSize: [6, 7, 8],
+      fontSize: [7, 8],
       lineHeight: 'tight',
       mt: 0,
       mb: 4,
@@ -102,7 +102,7 @@ const theme: Theme = {
     h2: {
       fontFamily: 'heading',
       fontWeight: 'heading',
-      fontSize: [5, 6, 7],
+      fontSize: [6, 7],
       lineHeight: 'tight',
       mt: 0,
       mb: 3,
@@ -125,7 +125,7 @@ const theme: Theme = {
       mb: 2,
     },
     p: {
-      fontSize: [3, 4],
+      fontSize: [4, 5, 6],
       lineHeight: 'normal',
       mt: 0,
       mb: 3,
@@ -138,7 +138,7 @@ const theme: Theme = {
       },
     },
     ul: {
-      fontSize: [3, 4],
+      fontSize: [4, 5, 6],
       lineHeight: 'relaxed',
       pl: 5,
       mt: 0,
@@ -160,7 +160,7 @@ const theme: Theme = {
       },
     },
     ol: {
-      fontSize: [3, 4],
+      fontSize: [4, 5, 6],
       lineHeight: 'relaxed',
       pl: 5,
       mt: 0,
@@ -228,21 +228,24 @@ const theme: Theme = {
     },
     table: {
       borderCollapse: 'collapse',
-      fontSize: 3,
+      fontSize: [3, 4],
       mb: 3,
+      width: '100%',
+      border: '2px solid var(--theme-ui-colors-border)',
       borderRadius: 'md',
       overflow: 'hidden',
     },
     th: {
-      borderBottom: '2px solid var(--theme-ui-colors-border)',
+      border: '1px solid var(--theme-ui-colors-border)',
       p: 3,
       textAlign: 'left',
       fontWeight: 'bold',
-      fontSize: 2,
+      fontSize: [2, 3],
       color: 'text',
+      bg: 'surface',
     },
     td: {
-      borderBottom: 'thin',
+      border: '1px solid var(--theme-ui-colors-border)',
       p: 3,
     },
     tr: {

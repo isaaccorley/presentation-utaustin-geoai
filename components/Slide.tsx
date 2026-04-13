@@ -30,6 +30,8 @@ export function Slide({ children }: SlideProps) {
         py: [5, 6],
         boxSizing: 'border-box',
         position: 'relative',
+        overflowX: 'hidden',
+        overflowY: ['auto', 'hidden'],
       }}
     >
       {/* Subtle radial gradient for depth */}

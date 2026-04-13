@@ -969,7 +969,7 @@ class S15_GeoFMComparison(PacedScene):
 
         # Header
         header = make_row([c[0] for c in cols], is_header=True)
-        header.move_to(UP * 2.6)
+        header.move_to(UP * 3.0)
         self.play(FadeIn(header), run_time=0.4)
 
         # Data rows
@@ -978,7 +978,7 @@ class S15_GeoFMComparison(PacedScene):
             row = make_row([model, arch, params, data, year])
             # Color the model name cell with accent
             row[0][1].set_color(accent)
-            row.move_to(UP * (2.6 - (i + 1) * 0.58))
+            row.move_to(UP * (3.0 - (i + 1) * 0.52))
             row_groups.append(row)
             self.play(FadeIn(row, shift=RIGHT * 0.15), run_time=0.25)
 
@@ -996,7 +996,7 @@ class S15_GeoFMComparison(PacedScene):
         self.play(FadeOut(presto_rect), FadeOut(clay_rect), run_time=0.3)
 
         chip = stat_chip("8 models, no single winner", "GEO-Bench 2024", CORAL, width=5.5)
-        chip.to_edge(DOWN, buff=0.25)
+        chip.to_edge(DOWN, buff=0.35)
         self.play(FadeIn(chip, shift=UP * 0.15), run_time=0.6)
         cleanup(self, hold=2.0)
 
