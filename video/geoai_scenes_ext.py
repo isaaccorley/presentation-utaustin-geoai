@@ -726,7 +726,7 @@ class S13_ProductionPipeline(PacedScene):
         self.play(FadeIn(tag), run_time=0.6)
 
         title = sans("After Inference", size=28, color=CORAL)
-        title.to_edge(UP, buff=0.85).to_edge(LEFT, buff=0.9)
+        title.next_to(tag, DOWN, buff=0.25).to_edge(LEFT, buff=0.9)
         self.play(FadeIn(title), run_time=0.5)
 
         # ── Row 1: Post-processing ──
@@ -740,7 +740,7 @@ class S13_ProductionPipeline(PacedScene):
             ("Area/Vertex\nFilter", EARTH),
         ]
         row1_lbl = sans("Post-processing", size=18, color=AMBER)
-        row1_lbl.next_to(title, DOWN, buff=0.35).to_edge(LEFT, buff=0.9)
+        row1_lbl.next_to(title, DOWN, buff=0.25).to_edge(LEFT, buff=0.9)
         self.play(FadeIn(row1_lbl), run_time=0.3)
 
         row1_boxes = VGroup()
@@ -752,10 +752,11 @@ class S13_ProductionPipeline(PacedScene):
             lbl.move_to(box)
             row1_boxes.add(VGroup(box, lbl))
         row1_boxes.arrange(RIGHT, buff=0.22)
-        row1_boxes.next_to(row1_lbl, DOWN, buff=0.2)
-        # scale to fit frame width
+        # Scale to fit frame width, then center horizontally
         if row1_boxes.width > 12.0:
             row1_boxes.scale(12.0 / row1_boxes.width)
+        row1_boxes.next_to(row1_lbl, DOWN, buff=0.2)
+        row1_boxes.set_x(0)  # center horizontally on frame
 
         row1_arrows = VGroup()
         for i in range(len(row1_boxes) - 1):
@@ -795,9 +796,10 @@ class S13_ProductionPipeline(PacedScene):
             lbl.move_to(box)
             row2_boxes.add(VGroup(box, lbl))
         row2_boxes.arrange(RIGHT, buff=0.3)
-        row2_boxes.next_to(row2_lbl, DOWN, buff=0.2)
         if row2_boxes.width > 12.0:
             row2_boxes.scale(12.0 / row2_boxes.width)
+        row2_boxes.next_to(row2_lbl, DOWN, buff=0.2)
+        row2_boxes.set_x(0)  # center horizontally on frame
 
         row2_arrows = VGroup()
         for i in range(len(row2_boxes) - 1):
@@ -961,9 +963,10 @@ class S15_GeoFMComparison(PacedScene):
                     lbl = mono(text, size=11, color=MOON)
                 if lbl.width > w - 0.15:
                     lbl.scale((w - 0.15) / lbl.width)
-                lbl.move_to(bg)
-                bg.move_to([x + w / 2, 0, 0])
-                items.add(VGroup(bg, lbl))
+                # Group first, then position — so label moves with background
+                cell = VGroup(bg, lbl)
+                cell.move_to([x + w / 2, 0, 0])
+                items.add(cell)
                 x += w + 0.3
             return items
 
