@@ -53,23 +53,6 @@ export const meta = {
 
 ---
 
-# Why Cloud-Native Matters
-
-Geospatial data used to live in **agency silos** — download a 50 GB archive, convert formats, clip to your AOI, load into a local database. Every project started from scratch.
-
-Cloud-native formats changed the game: **the data lives on object storage, and you stream only the bytes you need.** No servers, no downloads, no format conversion.
-
-This section covers the stack that makes it possible.
-
-<SpeakerNotes>
-Chris Holmes frames this really well — traditional SDIs were government-centered,
-top-down, siloed. The cloud-native geospatial movement is community-driven,
-interoperable, and built on open standards that work with the web.
-The key insight: put data in smart formats on dumb storage.
-</SpeakerNotes>
-
----
-
 <Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
 <div>
 
@@ -182,31 +165,6 @@ headers becomes a tile server for free.
 
 ---
 
-<Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
-<div>
-
-## Search Across Catalogs
-
-- **STAC** = common API for geospatial search
-- One query → Planetary Computer, Earth Search, USGS
-- Standardized results regardless of provider
-- `pystac-client` for Python access
-
-</div>
-<div>
-
-<Video src="/videos/S06_STACSearchFanout.mp4" title="STAC Search Fan-out" />
-
-</div>
-</Columns>
-
-<SpeakerNotes>
-STAC gives you a common API to search across any catalog — Microsoft
-Planetary Computer, AWS Earth Search, USGS. One query, many providers.
-</SpeakerNotes>
-
----
-
 # The Data Already Exists
 
 - **2.6 billion buildings** — Overture Maps (up from 785M in 2023)
@@ -247,6 +205,31 @@ Overture went from 785M to 2.6B buildings in under two years.
 GeoParquet stores data in columnar row groups with spatial statistics.
 When you query with a bounding box, DuckDB can skip entire row groups
 that don't overlap your AOI — predicate pushdown.
+</SpeakerNotes>
+
+---
+
+<Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
+<div>
+
+## Search Across Catalogs
+
+- **STAC** = common API for geospatial search
+- One query → Planetary Computer, Earth Search, USGS
+- Standardized results regardless of provider
+- `pystac-client` for Python access
+
+</div>
+<div>
+
+<Video src="/videos/S06_STACSearchFanout.mp4" title="STAC Search Fan-out" />
+
+</div>
+</Columns>
+
+<SpeakerNotes>
+STAC gives you a common API to search across any catalog — Microsoft
+Planetary Computer, AWS Earth Search, USGS. One query, many providers.
 </SpeakerNotes>
 
 ---
@@ -324,18 +307,22 @@ available as Zarr — 1 PB of data, streamable.
 
 ---
 
-# Search & Discover with STAC
+# Search & Load Satellite Data
+
+<Columns cols={2} gap={4}>
+<div>
 
 ```python
 from pystac_client import Client
 
 catalog = Client.open(
-    "https://planetarycomputer.microsoft.com/api/stac/v1"
+    "https://planetarycomputer.microsoft.com"
+    "/api/stac/v1"
 )
 
 search = catalog.search(
     collections=["sentinel-2-l2a"],
-    bbox=[-97.745, 30.28, -97.73, 30.295],  # UT Austin
+    bbox=[-97.745, 30.28, -97.73, 30.295],
     datetime="2024-01-01/2024-12-31",
     query={"eo:cloud_cover": {"lt": 15}},
 )
@@ -344,20 +331,17 @@ items = search.item_collection()
 print(f"{len(items)} scenes found")
 ```
 
-<SpeakerNotes>
-pystac-client gives you programmatic access to any STAC API.
-A few lines of Python to search the planet.
-</SpeakerNotes>
-
----
-
-# Load Satellite Data in 4 Lines
+</div>
+<div>
 
 ```python
 import odc.stac
 import planetary_computer
 
-signed = [planetary_computer.sign(item) for item in items]
+signed = [
+    planetary_computer.sign(item)
+    for item in items
+]
 
 ds = odc.stac.load(
     signed,
@@ -365,49 +349,45 @@ ds = odc.stac.load(
     resolution=10,
     bbox=[-97.745, 30.28, -97.73, 30.295],
 )
-# ds is an xarray.Dataset — ready for analysis
+# ds is an xarray.Dataset
+# — ready for analysis
 ```
 
+</div>
+</Columns>
+
 <SpeakerNotes>
+pystac-client gives you programmatic access to any STAC API.
+A few lines of Python to search the planet.
 odc.stac turns STAC items into xarray Datasets with a single call.
 Streaming COGs directly from Azure blob storage.
 </SpeakerNotes>
 
 ---
 
-<Columns cols={2} gap={4} align="center" ratio="1fr 1fr">
+# Sentinel-2 — 10 m
+
+<Columns cols={3} gap={3}>
 <div>
 
 <Img
   src="/images/utaustin-rgb.png"
   alt="True color RGB of UT Austin from Sentinel-2"
-  style={{ width: '100%', maxHeight: '70vh', objectFit: 'contain', borderRadius: 6 }}
+  style={{ width: '100%', maxHeight: '60vh', objectFit: 'contain', borderRadius: 6 }}
 />
 
-</div>
-<div>
-
-## Sentinel-2 — 10 m
-
-**True Color RGB** — what 4 lines of code produce
-
-You can make out the stadium, major roads, and green spaces — but at 10m pixels, individual buildings blur together.
+**True Color RGB**
 
 </div>
-</Columns>
-
----
-
-<Columns cols={2} gap={4} align="center">
 <div>
 
 <Img
   src="/images/utaustin-nir.png"
   alt="False color NIR composite of UT Austin campus"
-  style={{ width: '100%', maxHeight: '72vh', objectFit: 'contain', borderRadius: 6 }}
+  style={{ width: '100%', maxHeight: '60vh', objectFit: 'contain', borderRadius: 6 }}
 />
 
-**False Color (NIR-R-G)** — vegetation appears bright red
+**False Color (NIR-R-G)**
 
 </div>
 <div>
@@ -415,10 +395,10 @@ You can make out the stadium, major roads, and green spaces — but at 10m pixel
 <Img
   src="/images/utaustin-ndvi.png"
   alt="NDVI map of UT Austin campus"
-  style={{ width: '100%', maxHeight: '72vh', objectFit: 'contain', borderRadius: 6 }}
+  style={{ width: '100%', maxHeight: '60vh', objectFit: 'contain', borderRadius: 6 }}
 />
 
-**NDVI** — green = vegetation, brown = bare/built
+**NDVI**
 
 </div>
 </Columns>
@@ -489,6 +469,8 @@ At 1m you can see individual trees and rooftops.
 
 Key finding: supervised baselines remain competitive on regional tasks (GEO-Bench 2024).
 
+<Img src="/images/arch-prithvi.png" alt="Prithvi 2.0 architecture" style={{ width: '100%', borderRadius: 6, marginTop: 16 }} />
+
 </div>
 <div>
 
@@ -502,58 +484,8 @@ The FM landscape is exploding. Key differentiator from natural image FMs:
 these understand multispectral bands, temporal sequences, and geographic context.
 Presto at 402K params vs Clay at 632M — 1500x difference — yet both competitive
 on different tasks. GEO-Bench shows no single model dominates.
-</SpeakerNotes>
-
----
-
-# Architecture Comparison
-
-<Columns cols={2} gap={4} align="center">
-<div>
-
-<Img src="/images/arch-prithvi.png" alt="Prithvi 2.0 architecture" style={{ width: '100%', borderRadius: 6 }} />
-
-**Prithvi 2.0** — ViT-MAE, 300–600M params, 4.2M HLS chips
-
-</div>
-<div>
-
-<Img src="/images/arch-clay.png" alt="Clay 1.5 architecture" style={{ width: '100%', borderRadius: 6 }} />
-
-**Clay 1.5** — ViT + DINOv2 distillation, 632M params, 70M multi-sensor chips
-
-</div>
-</Columns>
-
-<SpeakerNotes>
 Prithvi: NASA/IBM, trained on Harmonized Landsat Sentinel (HLS) with temporal
-tubelet patching. Clay: Development Seed, uses DINOv2 teacher for distillation,
-handles 6 different sensors through a meta-learner input stage.
-</SpeakerNotes>
-
----
-
-<Columns cols={2} gap={4} align="center">
-<div>
-
-<Img src="/images/arch-satmae.png" alt="SatMAE architecture" style={{ width: '100%', borderRadius: 6 }} />
-
-**SatMAE** — ViT-L MAE, ~304M params, group spectral positional encoding
-
-</div>
-<div>
-
-<Img src="/images/arch-dofa.png" alt="DOFA architecture" style={{ width: '100%', borderRadius: 6 }} />
-
-**DOFA** — ViT + wavelength-conditioned hypernetwork, single model for 5 modalities
-
-</div>
-</Columns>
-
-<SpeakerNotes>
-SatMAE introduced group-based spectral positional encoding for multi-spectral bands.
-DOFA's key innovation: a hypernetwork generates dynamic convolution kernels conditioned
-on central wavelengths — one backbone adapts to optical, SAR, and hyperspectral at inference.
+tubelet patching. Clay: Development Seed, uses DINOv2 teacher for distillation.
 </SpeakerNotes>
 
 ---
@@ -576,31 +508,21 @@ barriers as the top obstacles to operational deployment.
 
 ---
 
-# Two Paradigms for Self-Supervised Learning
+# Geospatial Foundation Model Pretraining
 
-<Columns cols={2} gap={5}>
+<Columns cols={2} gap={4}>
 <div>
 
-### Contrastive Learning
+**Contrastive Learning**
 
-Compare pairs of views of the **same** location:
-- Augment a tile → two views
-- Encode both → **pull embeddings together**
-- Different tile → **push apart**
-
-*Used by:* SatCLIP, GeoCLIP, CLIP-RS, Presto
+<Video src="/videos/S08_ContrastiveLearning.mp4" title="Contrastive Learning on Satellite Tiles" />
 
 </div>
 <div>
 
-### Masked Autoencoding
+**Masked Autoencoding**
 
-Reconstruct from **partial** observations:
-- Mask 75% of image patches
-- Encoder sees only visible 25%
-- Decoder reconstructs full image
-
-*Used by:* SatMAE, Prithvi, Scale-MAE, Clay, AlphaEarth
+<Video src="/videos/S09_MAEMaskedModeling.mp4" title="Masked Autoencoder for Satellite Imagery" />
 
 </div>
 </Columns>
@@ -609,58 +531,27 @@ Reconstruct from **partial** observations:
 Contrastive learning learns what makes tiles similar or different.
 MAE learns spatial structure by predicting missing patches. They produce
 different kinds of features — contrastive for retrieval, MAE for dense prediction.
+Two augmented views of the same satellite tile get encoded; embeddings pulled
+together, different tiles pushed apart. For MAE, 75% of patches are masked;
+encoder sees only visible 25%, decoder reconstructs the full image.
 </SpeakerNotes>
 
 ---
 
-<Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
+# Pixel vs Patch Embeddings
+
+<Columns cols={2} gap={4} ratio="3fr 2fr">
 <div>
 
-## Contrastive Learning
+| | **Pixel Embedding** | **Patch Embedding** |
+|---|---|---|
+| **Output shape** | One vector per pixel | One vector per patch (e.g. 16x16) |
+| **Spatial detail** | High — preserves pixel-level info | Compressed — summarizes patch |
+| **Best for** | Segmentation, change detection | Classification, retrieval, generation |
+| **Context window** | Narrow — local pixel neighborhood | Wide — entire patch context |
+| **Examples** | Presto, SatCLIP | SatMAE, Clay, DOFA, Prithvi |
 
-Two augmented views of the **same** satellite tile get encoded. Their embeddings are pulled together in the space. Different tiles are pushed apart.
-
-The model learns a **similarity metric** without any labels.
-
-</div>
-<div>
-
-<Video src="/videos/S08_ContrastiveLearning.mp4" title="Contrastive Learning on Satellite Tiles" />
-
-</div>
-</Columns>
-
----
-
-<Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
-<div>
-
-## Masked Autoencoding
-
-75% of the image patches are masked. The encoder only sees the visible 25%. The decoder reconstructs the full image.
-
-The model learns **spatial structure** by predicting what's missing — no labels needed.
-
-</div>
-<div>
-
-<Video src="/videos/S09_MAEMaskedModeling.mp4" title="Masked Autoencoder for Satellite Imagery" />
-
-</div>
-</Columns>
-
----
-
-<Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
-<div>
-
-## Pixel vs Patch Embeddings
-
-- **Pixel:** one vector per pixel — high spatial detail
-- **Patch:** one vector per 16×16 block — richer semantics
-- Pixel suits segmentation & change detection
-- Patch suits classification & retrieval
-- Most FMs moving toward **patch** with ViTs
+> Most foundation models are moving toward **patch embeddings** with vision transformers — the spatial compression is worth the richer semantics.
 
 </div>
 <div>
@@ -676,20 +567,6 @@ vector per pixel — great for dense tasks like segmentation. Patch embeddings
 (SatMAE, Clay, DOFA) compress spatial info into one vector per patch — richer
 semantics, better for classification and retrieval.
 </SpeakerNotes>
-
----
-
-# Pixel vs Patch Embeddings
-
-| | **Pixel Embedding** | **Patch Embedding** |
-|---|---|---|
-| **Output shape** | One vector per pixel | One vector per patch (e.g. 16x16) |
-| **Spatial detail** | High — preserves pixel-level info | Compressed — summarizes patch |
-| **Best for** | Segmentation, change detection | Classification, retrieval, generation |
-| **Context window** | Narrow — local pixel neighborhood | Wide — entire patch context |
-| **Examples** | Presto, SatCLIP | SatMAE, Clay, DOFA, Prithvi |
-
-> Most foundation models are moving toward **patch embeddings** with vision transformers — the spatial compression is worth the richer semantics.
 
 ---
 
@@ -737,6 +614,56 @@ post-processing, productionization, serving — is 80% of the real work.
 
 ---
 
+# TorchGeo: Sampling & Training
+
+<Columns cols={2} gap={4} align="center">
+<div>
+
+- Geospatial data = **continuous raster fields**
+- `&` operator creates **IntersectionDataset**
+- Only samples where imagery + labels overlap
+- Handles CRS, resolution, alignment automatically
+
+<Video src="/videos/S03_TorchGeoSampling.mp4" title="TorchGeo GeoSampling" />
+
+</div>
+<div>
+
+```python
+from torchgeo.datasets import (
+    Sentinel2, EnviroAtlas,
+)
+from torchgeo.samplers import (
+    RandomGeoSampler,
+)
+from torch.utils.data import DataLoader
+
+dataset = (
+    Sentinel2("data/")
+    & EnviroAtlas("labels/")
+)
+sampler = RandomGeoSampler(
+    dataset, size=256, length=1000,
+)
+dataloader = DataLoader(
+    dataset,
+    sampler=sampler,
+    batch_size=16,
+)
+```
+
+</div>
+</Columns>
+
+<SpeakerNotes>
+TorchGeo treats geospatial data as continuous raster fields indexed by space
+and time. The ampersand operator creates an IntersectionDataset.
+The intersection operator is TorchGeo's key innovation. Standard PyTorch
+DataLoader — just with geospatial awareness built in.
+</SpeakerNotes>
+
+---
+
 <Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
 <div>
 
@@ -758,50 +685,6 @@ post-processing, productionization, serving — is 80% of the real work.
 <SpeakerNotes>
 This animation shows how large satellite scenes get tiled, processed through
 a model, and reassembled into a georeferenced output.
-</SpeakerNotes>
-
----
-
-<Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
-<div>
-
-## TorchGeo GeoSampling
-
-- Geospatial data = **continuous raster fields**
-- `&` operator creates **IntersectionDataset**
-- Only samples where imagery + labels overlap
-- Handles CRS, resolution, alignment automatically
-
-</div>
-<div>
-
-<Video src="/videos/S03_TorchGeoSampling.mp4" title="TorchGeo GeoSampling" />
-
-</div>
-</Columns>
-
-<SpeakerNotes>
-TorchGeo treats geospatial data as continuous raster fields indexed by space
-and time. The ampersand operator creates an IntersectionDataset.
-</SpeakerNotes>
-
----
-
-# TorchGeo: Geospatial ML in 6 Lines
-
-```python
-from torchgeo.datasets import Sentinel2, EnviroAtlas
-from torchgeo.samplers import RandomGeoSampler
-from torch.utils.data import DataLoader
-
-dataset = Sentinel2("data/") & EnviroAtlas("labels/")
-sampler = RandomGeoSampler(dataset, size=256, length=1000)
-dataloader = DataLoader(dataset, sampler=sampler, batch_size=16)
-```
-
-<SpeakerNotes>
-The intersection operator is TorchGeo's key innovation. Standard PyTorch
-DataLoader — just with geospatial awareness built in.
 </SpeakerNotes>
 
 ---
@@ -895,53 +778,22 @@ at global scale.
 
 ---
 
-# From Model to Product — The Extra Mile
-
-Getting predictions isn't the end. Making them **usable** is:
-
-<Columns cols={2} gap={4}>
-<div>
-
-**Post-processing**
-- Weighted overlap merging of tile predictions
-- Binary morphology (opening / closing)
-- Land cover filtering (remove non-agricultural)
-- Polygonization (raster → geometries)
-- Area & vertex count filtering
-
-</div>
-<div>
-
-**Productionization**
-- Spatial partitioning & quantization
-- Tile index + STAC catalog for search
-- COG with overviews for raster visualization
-- PMTiles for snappy vector browsing at global scale
-- Cloud storage serving
-
-</div>
-</Columns>
-
-> You can't just train a model, put it on GitHub, and hope people come. Going the extra mile is what separates prototype from product.
-
-<SpeakerNotes>
-This is what separates research from production. The model is maybe 20%
-of the work. The pipeline, post-processing, and productionization are the
-other 80% that make it actually usable.
-</SpeakerNotes>
-
----
+# From Model to Product
 
 <Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
 <div>
 
-## After Inference
+**Post-processing**
+- Weighted overlap merging
+- Binary morphology & land cover filtering
+- Polygonization & area filtering
 
-**Post-processing:** overlap merging → morphology → land cover filter → polygonize
+**Productionization**
+- Spatial partitioning & STAC catalog
+- COG overviews + PMTiles for visualization
+- Cloud storage serving
 
-**Productionization:** spatial partition → STAC catalog → COG overviews → PMTiles
-
-> The devil is in the details — this is where prototype becomes product.
+> Prototype → product is where the real work lives.
 
 </div>
 <div>
@@ -952,10 +804,12 @@ other 80% that make it actually usable.
 </Columns>
 
 <SpeakerNotes>
+This is what separates research from production. The model is maybe 20%
+of the work. The pipeline, post-processing, and productionization are the
+other 80% that make it actually usable.
 This animation walks through every step after inference: overlap merging,
 morphological cleanup, land cover filtering, polygonization, spatial
 partitioning, and finally serving as COG + PMTiles from cloud storage.
-The devil is in the details.
 </SpeakerNotes>
 
 ---
