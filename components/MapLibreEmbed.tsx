@@ -66,7 +66,7 @@ export function MapLibreEmbed() {
         }
 
         // Build match expression for subtype colors
-        const colorMatch: any[] = ['match', ['get', 'subtype']];
+        const colorMatch = ['match', ['get', 'subtype']] as any;
         for (const [subtype, color] of SUBTYPE_COLORS) {
           colorMatch.push(subtype, color);
         }
