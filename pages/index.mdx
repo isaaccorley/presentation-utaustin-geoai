@@ -424,7 +424,7 @@ this as a ratio: (NIR - Red) / (NIR + Red).
 <Img
   src="/images/utaustin-naip-rgb.png"
   alt="NAIP aerial imagery of UT Austin campus at 1m resolution"
-  style={{ width: '100%', borderRadius: 6 }}
+  style={{ width: '100%', maxHeight: '65vh', objectFit: 'contain', borderRadius: 6 }}
 />
 
 **NAIP RGB — 1 m**
@@ -435,7 +435,7 @@ this as a ratio: (NIR - Red) / (NIR + Red).
 <Img
   src="/images/utaustin-naip-ndvi.png"
   alt="NAIP NDVI of UT Austin"
-  style={{ width: '100%', borderRadius: 6 }}
+  style={{ width: '100%', maxHeight: '65vh', objectFit: 'contain', borderRadius: 6 }}
 />
 
 **NAIP NDVI — individual trees visible**
@@ -967,7 +967,7 @@ Built with MapLibre + PMTiles, served serverlessly from cloud storage.
 
 ---
 
-<SectionSlide kicker="Section 04">
+<SectionSlide backgroundImage="/images/landsat-brown-1.jpg" kicker="Section 04">
 
 ## Building with AI Agents
 
@@ -993,22 +993,6 @@ hand-write every MapLibre callback or CSS grid layout.
 ---
 
 <Embed src="https://geospatialml.com" clip />
-
----
-
-<TerminalReplay
-  src="/casts/claude-geospatial.cast"
-  speed={2}
-  cols={120}
-  rows={30}
-  title="Claude Code — NDVI from Sentinel-2 over Austin"
-/>
-
-<SpeakerNotes>
-Live replay of Claude Code building an NDVI computation pipeline. The agent
-searches Planetary Computer for Sentinel-2, loads bands with odc.stac, computes
-NDVI, and saves as a Cloud-Optimized GeoTIFF — all from a single prompt.
-</SpeakerNotes>
 
 ---
 
@@ -1076,7 +1060,7 @@ type checking) and ships with CI that runs on every push. Fork it and go.
 
 ---
 
-<SectionSlide kicker="Section 05">
+<SectionSlide backgroundImage="/images/landsat-brown-2.jpg" kicker="Section 05">
 
 ## The Bigger Picture
 
