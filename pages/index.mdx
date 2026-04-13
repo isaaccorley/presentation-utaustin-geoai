@@ -998,7 +998,7 @@ hand-write every MapLibre callback or CSS grid layout.
 
 # Planetary Computer MCP
 
-<Columns cols={2} gap={4} align="center">
+<Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
 <div>
 
 **VS Code extension** — AI assistants meet Planetary Computer
@@ -1008,14 +1008,16 @@ hand-write every MapLibre callback or CSS grid layout.
 - **Generate** processing pipelines from natural language
 - Works with **Claude, Copilot**, and any MCP agent
 
-> Marketplace: **IsaacCorley.planetary-computer-mcp**
+Built the extension in a weekend with Claude Code.
 
 </div>
 <div>
 
-Built the extension in a weekend with Claude Code.
-
-MCP lets AI agents call **real geospatial APIs** — not just generate code, but actually *execute* searches and preview results.
+<Img
+  src="/images/pc-mcp-marketplace.png"
+  alt="Planetary Computer MCP - VS Code Marketplace"
+  style={{ width: '100%', borderRadius: 8, border: '1px solid rgba(244,244,235,0.1)' }}
+/>
 
 </div>
 </Columns>
@@ -1028,7 +1030,7 @@ it can search, browse, and generate pipelines without leaving VS Code.
 
 ---
 
-<Columns cols={2} gap={4} align="center">
+<Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
 <div>
 
 # Research Repo Template
@@ -1037,17 +1039,22 @@ it can search, browse, and generate pipelines without leaving VS Code.
 
 Fork → rename → start experimenting.
 
-> Stop reinventing project scaffolding every time you start a new paper.
-
-</div>
-<div>
-
 - **uv** — fast Python package management
 - **ruff** + **ty** — linting & type checking
 - **pre-commit** — hooks on every commit
 - **GitHub Actions CI** — tests on every push
 - **Hydra** configs + **W&B** logging
-- Reproducible environments out of the box
+- **LaTeX paper** + **slides** template folders — let Claude scaffold drafts, then review manually
+- Nobody should spend hours making update slides anymore
+
+</div>
+<div>
+
+<Img
+  src="/images/research-repo-github.png"
+  alt="Research Repo Template - GitHub"
+  style={{ width: '100%', borderRadius: 8, border: '1px solid rgba(244,244,235,0.1)' }}
+/>
 
 </div>
 </Columns>
@@ -1055,7 +1062,9 @@ Fork → rename → start experimenting.
 <SpeakerNotes>
 This is the template I use for every new research project. It enforces
 consistent tooling (uv for package management, ruff for linting, ty for
-type checking) and ships with CI that runs on every push. Fork it and go.
+type checking) and ships with CI that runs on every push. Includes LaTeX
+paper and slides folders so you can use Claude to scaffold drafts and then
+review manually. Fork it and go.
 </SpeakerNotes>
 
 ---
