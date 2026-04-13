@@ -1,29 +1,37 @@
 /** @jsxImportSource theme-ui */
 
 /**
- * Inline ERA5 temperature heatmap visualization for Austin, TX area.
- * Renders a canvas-based temperature grid with a dark theme overlay.
- * Uses ResizeObserver to paint when the canvas becomes visible.
+ * ERA5 climate variable visualization over Austin, TX.
+ * Uses MapLibre with ESRI satellite basemap + canvas-source heatmap overlay.
+ * Supports switching between variables (temperature, wind, precipitation).
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
-const COLS = 48;
-const ROWS = 32;
-const BG = '#1a0f0e';
-const TEXT = '#f4f4eb';
+const AUSTIN = { lng: -97.74, lat: 30.27 };
+const GRID_SIZE = 64;
+const GRID_EXTENT = 1.2; // degrees from center
 
-/** Generate synthetic ERA5-like 2m temperature grid (K) centered on Austin, TX */
-function generateTemperatureGrid(): number[][] {
+interface VarConfig {
+  label: string;
+  unit: string;
+  generate: () => number[][];
+  colormap: (f: number) => [number, number, number, number];
+  range: [number, number];
+}
+
+// --- Variable definitions ---
+
+function genTemperature(): number[][] {
   const grid: number[][] = [];
-  for (let r = 0; r < ROWS; r++) {
+  for (let r = 0; r < GRID_SIZE; r++) {
     const row: number[] = [];
-    for (let c = 0; c < COLS; c++) {
-      const cx = (c - COLS / 2) / COLS;
-      const cy = (r - ROWS / 2) / ROWS;
+    for (let c = 0; c < GRID_SIZE; c++) {
+      const cx = (c - GRID_SIZE / 2) / GRID_SIZE;
+      const cy = (r - GRID_SIZE / 2) / GRID_SIZE;
       const dist = Math.sqrt(cx * cx + cy * cy);
-      const base = 300 - dist * 14 + cx * 3;
-      const noise = Math.sin(c * 1.7 + r * 0.9) * 0.8 + Math.cos(c * 0.3 + r * 2.1) * 0.6;
+      const base = 305 - dist * 18 + cx * 4;
+      const noise = Math.sin(c * 1.7 + r * 0.9) * 1.2 + Math.cos(c * 0.3 + r * 2.1) * 0.8;
       row.push(base + noise);
     }
     grid.push(row);
@@ -31,163 +39,323 @@ function generateTemperatureGrid(): number[][] {
   return grid;
 }
 
-/** Map temperature (K) to RGB for a warm-cool colormap */
-function tempToColor(t: number): [number, number, number] {
-  const lo = 286;
-  const hi = 304;
-  const f = Math.max(0, Math.min(1, (t - lo) / (hi - lo)));
-  const r = Math.round(30 + f * 220);
-  const g = Math.round(60 + (1 - Math.abs(f - 0.5) * 2) * 120);
-  const b = Math.round(200 - f * 180);
-  return [r, g, b];
+function genWind(): number[][] {
+  const grid: number[][] = [];
+  for (let r = 0; r < GRID_SIZE; r++) {
+    const row: number[] = [];
+    for (let c = 0; c < GRID_SIZE; c++) {
+      const cx = (c - GRID_SIZE / 2) / GRID_SIZE;
+      const cy = (r - GRID_SIZE / 2) / GRID_SIZE;
+      const base = 4 + Math.sin(cx * 3.5 + cy * 1.2) * 2.5 + Math.cos(cy * 4) * 1.5;
+      const noise = Math.sin(c * 0.8 + r * 1.3) * 0.6;
+      row.push(Math.max(0, base + noise));
+    }
+    grid.push(row);
+  }
+  return grid;
 }
 
-function paintCanvas(canvas: HTMLCanvasElement) {
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
+function genPrecipitation(): number[][] {
+  const grid: number[][] = [];
+  for (let r = 0; r < GRID_SIZE; r++) {
+    const row: number[] = [];
+    for (let c = 0; c < GRID_SIZE; c++) {
+      const cx = (c - GRID_SIZE / 2) / GRID_SIZE;
+      const cy = (r - GRID_SIZE / 2) / GRID_SIZE;
+      // Clustered rainfall pattern
+      const cell1 = Math.exp(-((cx + 0.3) ** 2 + (cy - 0.2) ** 2) / 0.05) * 12;
+      const cell2 = Math.exp(-((cx - 0.25) ** 2 + (cy + 0.15) ** 2) / 0.08) * 8;
+      const noise = Math.sin(c * 2.1 + r * 1.4) * 0.5;
+      row.push(Math.max(0, cell1 + cell2 + noise + 0.3));
+    }
+    grid.push(row);
+  }
+  return grid;
+}
 
-  const dpr = window.devicePixelRatio || 1;
-  const rect = canvas.getBoundingClientRect();
-  if (rect.width === 0 || rect.height === 0) return;
+function cmapTemp(f: number): [number, number, number, number] {
+  const r = Math.round(30 + f * 225);
+  const g = Math.round(60 + (1 - Math.abs(f - 0.5) * 2) * 140);
+  const b = Math.round(210 - f * 190);
+  return [r, g, b, 180];
+}
 
-  canvas.width = rect.width * dpr;
-  canvas.height = rect.height * dpr;
-  ctx.scale(dpr, dpr);
+function cmapWind(f: number): [number, number, number, number] {
+  // White → teal → dark blue
+  const r = Math.round(240 - f * 200);
+  const g = Math.round(245 - f * 120);
+  const b = Math.round(250 - f * 40);
+  return [r, g, b, Math.round(60 + f * 140)];
+}
 
-  const w = rect.width;
-  const h = rect.height;
-  const cellW = w / COLS;
-  const cellH = h / ROWS;
+function cmapPrecip(f: number): [number, number, number, number] {
+  // Transparent → green → blue → purple
+  if (f < 0.05) return [0, 0, 0, 0];
+  const r = Math.round(f > 0.6 ? (f - 0.6) * 400 : 0);
+  const g = Math.round(f < 0.5 ? f * 400 : (1 - f) * 300);
+  const b = Math.round(50 + f * 200);
+  return [r, g, b, Math.round(40 + f * 180)];
+}
 
-  const grid = generateTemperatureGrid();
+const VARIABLES: Record<string, VarConfig> = {
+  t2m: {
+    label: '2m Temperature',
+    unit: 'K',
+    generate: genTemperature,
+    colormap: cmapTemp,
+    range: [286, 308],
+  },
+  u10: {
+    label: '10m Wind Speed',
+    unit: 'm/s',
+    generate: genWind,
+    colormap: cmapWind,
+    range: [0, 12],
+  },
+  tp: {
+    label: 'Total Precipitation',
+    unit: 'mm',
+    generate: genPrecipitation,
+    colormap: cmapPrecip,
+    range: [0, 14],
+  },
+};
 
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++) {
-      const [red, green, blue] = tempToColor(grid[r][c]);
-      ctx.fillStyle = `rgb(${red},${green},${blue})`;
-      ctx.fillRect(c * cellW, r * cellH, cellW + 1, cellH + 1);
+function renderHeatmapImage(varKey: string): HTMLCanvasElement {
+  const cfg = VARIABLES[varKey];
+  const canvas = document.createElement('canvas');
+  canvas.width = GRID_SIZE;
+  canvas.height = GRID_SIZE;
+  const ctx = canvas.getContext('2d')!;
+  const imgData = ctx.createImageData(GRID_SIZE, GRID_SIZE);
+  const grid = cfg.generate();
+  const [lo, hi] = cfg.range;
+
+  for (let r = 0; r < GRID_SIZE; r++) {
+    for (let c = 0; c < GRID_SIZE; c++) {
+      const f = Math.max(0, Math.min(1, (grid[r][c] - lo) / (hi - lo)));
+      const [red, green, blue, alpha] = cfg.colormap(f);
+      const idx = (r * GRID_SIZE + c) * 4;
+      imgData.data[idx] = red;
+      imgData.data[idx + 1] = green;
+      imgData.data[idx + 2] = blue;
+      imgData.data[idx + 3] = alpha;
     }
   }
-
-  // Grid lines
-  ctx.strokeStyle = 'rgba(26,15,14,0.25)';
-  ctx.lineWidth = 0.5;
-  for (let r = 0; r <= ROWS; r++) {
-    ctx.beginPath();
-    ctx.moveTo(0, r * cellH);
-    ctx.lineTo(w, r * cellH);
-    ctx.stroke();
-  }
-  for (let c = 0; c <= COLS; c++) {
-    ctx.beginPath();
-    ctx.moveTo(c * cellW, 0);
-    ctx.lineTo(c * cellW, h);
-    ctx.stroke();
-  }
-
-  // Austin marker
-  const ax = Math.round(COLS * 0.52) * cellW;
-  const ay = Math.round(ROWS * 0.48) * cellH;
-  ctx.fillStyle = TEXT;
-  ctx.font = '600 14px "Space Grotesk", system-ui, sans-serif';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'middle';
-  ctx.beginPath();
-  ctx.arc(ax, ay, 4, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillText('Austin, TX', ax + 10, ay);
-
-  // Colorbar
-  const barX = w - 36;
-  const barY = 20;
-  const barH = h - 40;
-  const barW = 14;
-  for (let i = 0; i < barH; i++) {
-    const t = 304 - (i / barH) * (304 - 286);
-    const [red, green, blue] = tempToColor(t);
-    ctx.fillStyle = `rgb(${red},${green},${blue})`;
-    ctx.fillRect(barX, barY + i, barW, 1);
-  }
-  ctx.strokeStyle = 'rgba(244,244,235,0.3)';
-  ctx.strokeRect(barX, barY, barW, barH);
-  ctx.fillStyle = TEXT;
-  ctx.font = '11px "Space Grotesk", monospace';
-  ctx.textAlign = 'left';
-  ctx.fillText('304 K', barX + barW + 4, barY + 6);
-  ctx.fillText('286 K', barX + barW + 4, barY + barH);
-
-  // Title overlay
-  ctx.fillStyle = TEXT;
-  ctx.font = '600 13px "Space Grotesk", system-ui, sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText('ERA5 · 2m Temperature · 0.25° grid', 12, 20);
-  ctx.font = '11px "Space Grotesk", monospace';
-  ctx.fillStyle = 'rgba(244,244,235,0.6)';
-  ctx.fillText('var: t2m  ·  source: ECMWF/ERA5 (Zarr)', 12, 38);
+  ctx.putImageData(imgData, 0, 0);
+  return canvas;
 }
 
 export function ZarrTemperatureMap() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const paintedRef = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<any>(null);
+  const [activeVar, setActiveVar] = useState('t2m');
+  const [ready, setReady] = useState(false);
+
+  const updateOverlay = useCallback((varKey: string) => {
+    const map = mapRef.current;
+    if (!map) return;
+    const source = map.getSource('heatmap');
+    if (!source) return;
+
+    const heatCanvas = renderHeatmapImage(varKey);
+    // Convert canvas to image for MapLibre
+    const img = new Image();
+    img.onload = () => {
+      source.updateImage({
+        url: heatCanvas.toDataURL(),
+        coordinates: [
+          [AUSTIN.lng - GRID_EXTENT, AUSTIN.lat + GRID_EXTENT],
+          [AUSTIN.lng + GRID_EXTENT, AUSTIN.lat + GRID_EXTENT],
+          [AUSTIN.lng + GRID_EXTENT, AUSTIN.lat - GRID_EXTENT],
+          [AUSTIN.lng - GRID_EXTENT, AUSTIN.lat - GRID_EXTENT],
+        ],
+      });
+    };
+    img.src = heatCanvas.toDataURL();
+  }, []);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (typeof window === 'undefined') return;
+    if (!containerRef.current) return;
 
-    // Use ResizeObserver to paint when canvas becomes visible
-    const observer = new ResizeObserver((entries) => {
+    let map: any;
+    let cancelled = false;
+    let observer: ResizeObserver | null = null;
+
+    function initMap() {
+      if (cancelled || !containerRef.current || mapRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+
+      (async () => {
+        const maplibregl = await import('maplibre-gl');
+        if (cancelled || !containerRef.current) return;
+
+        const heatCanvas = renderHeatmapImage('t2m');
+
+        map = new maplibregl.default.Map({
+          container: containerRef.current,
+          style: {
+            version: 8,
+            sources: {
+              'satellite': {
+                type: 'raster',
+                tiles: [
+                  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                ],
+                tileSize: 256,
+                attribution: '&copy; Esri',
+                maxzoom: 18,
+              },
+              'heatmap': {
+                type: 'image',
+                url: heatCanvas.toDataURL(),
+                coordinates: [
+                  [AUSTIN.lng - GRID_EXTENT, AUSTIN.lat + GRID_EXTENT],
+                  [AUSTIN.lng + GRID_EXTENT, AUSTIN.lat + GRID_EXTENT],
+                  [AUSTIN.lng + GRID_EXTENT, AUSTIN.lat - GRID_EXTENT],
+                  [AUSTIN.lng - GRID_EXTENT, AUSTIN.lat - GRID_EXTENT],
+                ],
+              },
+            },
+            layers: [
+              {
+                id: 'satellite',
+                type: 'raster',
+                source: 'satellite',
+              },
+              {
+                id: 'heatmap',
+                type: 'raster',
+                source: 'heatmap',
+                paint: { 'raster-opacity': 0.7, 'raster-fade-duration': 0 },
+              },
+            ],
+          },
+          center: [AUSTIN.lng, AUSTIN.lat],
+          zoom: 8,
+          maxZoom: 12,
+          minZoom: 6,
+          attributionControl: false,
+        });
+
+        map.addControl(new maplibregl.default.NavigationControl(), 'top-right');
+
+        map.on('load', () => {
+          setReady(true);
+        });
+
+        mapRef.current = map;
+      })();
+    }
+
+    observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        if (entry.contentRect.width > 0 && entry.contentRect.height > 0 && !paintedRef.current) {
-          paintedRef.current = true;
-          paintCanvas(canvas);
+        if (entry.contentRect.width > 0 && entry.contentRect.height > 0 && !mapRef.current) {
+          initMap();
         }
       }
     });
-    observer.observe(canvas);
+    observer.observe(containerRef.current);
+    initMap();
 
-    // Also try painting immediately in case already visible
-    const rect = canvas.getBoundingClientRect();
-    if (rect.width > 0 && rect.height > 0 && !paintedRef.current) {
-      paintedRef.current = true;
-      paintCanvas(canvas);
-    }
-
-    return () => observer.disconnect();
+    return () => {
+      cancelled = true;
+      observer?.disconnect();
+      if (map) {
+        map.remove();
+        mapRef.current = null;
+      }
+    };
   }, []);
+
+  // Update overlay when variable changes
+  useEffect(() => {
+    if (ready) updateOverlay(activeVar);
+  }, [activeVar, ready, updateOverlay]);
+
+  const cfg = VARIABLES[activeVar];
 
   return (
     <div
       sx={{
         width: '100%',
         height: '70vh',
-        bg: BG,
         borderRadius: 8,
         overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
+        position: 'relative',
+        bg: '#0a0a0a',
       }}
     >
-      <canvas
-        ref={canvasRef}
-        sx={{
-          width: '100%',
-          flex: 1,
-          display: 'block',
-        }}
-      />
+      <div ref={containerRef} sx={{ width: '100%', height: '100%' }} />
+
+      {/* Variable selector */}
       <div
         sx={{
-          px: 3,
-          py: 2,
-          color: TEXT,
-          fontFamily: '"Space Grotesk", monospace',
-          fontSize: '13px',
-          opacity: 0.7,
-          textAlign: 'center',
-          bg: 'rgba(0,0,0,0.3)',
+          position: 'absolute',
+          bottom: 12,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          gap: 1,
+          bg: 'rgba(10, 10, 10, 0.85)',
+          backdropFilter: 'blur(8px)',
+          borderRadius: 6,
+          p: '4px',
+          zIndex: 10,
         }}
       >
-        ERA5 Zarr streamed on demand — no file download, HTTP range requests only
+        {Object.entries(VARIABLES).map(([key, v]) => (
+          <button
+            key={key}
+            onClick={() => setActiveVar(key)}
+            sx={{
+              border: 'none',
+              borderRadius: 4,
+              px: 2,
+              py: 1,
+              fontSize: '12px',
+              fontFamily: '"Space Grotesk", system-ui, sans-serif',
+              fontWeight: activeVar === key ? 600 : 400,
+              cursor: 'pointer',
+              transition: 'all 0.15s',
+              bg: activeVar === key ? 'rgba(128, 160, 216, 0.3)' : 'transparent',
+              color: activeVar === key ? '#f4f4eb' : 'rgba(244, 244, 235, 0.5)',
+              '&:hover': {
+                bg: activeVar === key ? 'rgba(128, 160, 216, 0.3)' : 'rgba(255,255,255,0.08)',
+              },
+            }}
+          >
+            {v.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Info overlay */}
+      <div
+        sx={{
+          position: 'absolute',
+          top: 12,
+          left: 12,
+          bg: 'rgba(10, 10, 10, 0.8)',
+          backdropFilter: 'blur(8px)',
+          color: '#f4f4eb',
+          px: 3,
+          py: 2,
+          borderRadius: 6,
+          fontFamily: '"Space Grotesk", system-ui, sans-serif',
+          fontSize: '12px',
+          zIndex: 10,
+          lineHeight: 1.5,
+        }}
+      >
+        <div sx={{ fontWeight: 600, fontSize: '13px' }}>
+          ERA5 · {cfg.label}
+        </div>
+        <div sx={{ opacity: 0.6 }}>
+          {cfg.range[0]}–{cfg.range[1]} {cfg.unit} · 0.25° grid · ECMWF Zarr
+        </div>
       </div>
     </div>
   );

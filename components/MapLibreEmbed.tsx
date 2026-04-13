@@ -54,6 +54,16 @@ export function MapLibreEmbed() {
             version: 8,
             glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
             sources: {
+              'carto-dark': {
+                type: 'raster',
+                tiles: [
+                  'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
+                  'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
+                  'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
+                ],
+                tileSize: 256,
+                attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+              },
               buildings: {
                 type: 'vector',
                 url: `pmtiles://${OVERTURE_BUILDINGS_URL}`,
@@ -61,9 +71,10 @@ export function MapLibreEmbed() {
             },
             layers: [
               {
-                id: 'background',
-                type: 'background',
-                paint: { 'background-color': '#1a0f0e' },
+                id: 'basemap',
+                type: 'raster',
+                source: 'carto-dark',
+                paint: { 'raster-opacity': 0.85 },
               },
               {
                 id: 'buildings-fill',
