@@ -2,27 +2,30 @@
 
 /**
  * ERA5 climate variable visualization over Austin, TX.
- * Uses MapLibre with ESRI satellite basemap + canvas-source heatmap overlay.
- * Supports switching between variables (temperature, wind, precipitation).
+ * MapLibre with ESRI satellite basemap + Carto labels + heatmap overlay.
+ * Supports switching variables and scrubbing time via slider.
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 
 const AUSTIN = { lng: -97.74, lat: 30.27 };
 const GRID_SIZE = 64;
-const GRID_EXTENT = 1.2; // degrees from center
+const GRID_EXTENT = 1.2;
+
+// 24 hourly timesteps
+const HOURS = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00 UTC`);
 
 interface VarConfig {
   label: string;
   unit: string;
-  generate: () => number[][];
+  generate: (hour: number) => number[][];
   colormap: (f: number) => [number, number, number, number];
   range: [number, number];
 }
 
-// --- Variable definitions ---
-
-function genTemperature(): number[][] {
+function genTemperature(hour: number): number[][] {
+  // Diurnal cycle: coolest at 06, warmest at 15
+  const diurnal = -3 * Math.cos(((hour - 15) / 24) * 2 * Math.PI);
   const grid: number[][] = [];
   for (let r = 0; r < GRID_SIZE; r++) {
     const row: number[] = [];
@@ -30,8 +33,10 @@ function genTemperature(): number[][] {
       const cx = (c - GRID_SIZE / 2) / GRID_SIZE;
       const cy = (r - GRID_SIZE / 2) / GRID_SIZE;
       const dist = Math.sqrt(cx * cx + cy * cy);
-      const base = 305 - dist * 18 + cx * 4;
-      const noise = Math.sin(c * 1.7 + r * 0.9) * 1.2 + Math.cos(c * 0.3 + r * 2.1) * 0.8;
+      // Urban heat island effect in center
+      const uhi = Math.exp(-dist * dist / 0.08) * 2;
+      const base = 300 + diurnal + uhi - dist * 14 + cx * 4;
+      const noise = Math.sin(c * 1.7 + r * 0.9 + hour * 0.3) * 1.0;
       row.push(base + noise);
     }
     grid.push(row);
@@ -39,15 +44,16 @@ function genTemperature(): number[][] {
   return grid;
 }
 
-function genWind(): number[][] {
+function genWind(hour: number): number[][] {
+  const timeShift = hour * 0.4;
   const grid: number[][] = [];
   for (let r = 0; r < GRID_SIZE; r++) {
     const row: number[] = [];
     for (let c = 0; c < GRID_SIZE; c++) {
       const cx = (c - GRID_SIZE / 2) / GRID_SIZE;
       const cy = (r - GRID_SIZE / 2) / GRID_SIZE;
-      const base = 4 + Math.sin(cx * 3.5 + cy * 1.2) * 2.5 + Math.cos(cy * 4) * 1.5;
-      const noise = Math.sin(c * 0.8 + r * 1.3) * 0.6;
+      const base = 4 + Math.sin(cx * 3.5 + cy * 1.2 + timeShift) * 2.5 + Math.cos(cy * 4 + timeShift * 0.7) * 1.5;
+      const noise = Math.sin(c * 0.8 + r * 1.3 + hour * 0.2) * 0.6;
       row.push(Math.max(0, base + noise));
     }
     grid.push(row);
@@ -55,18 +61,20 @@ function genWind(): number[][] {
   return grid;
 }
 
-function genPrecipitation(): number[][] {
+function genPrecipitation(hour: number): number[][] {
+  // Storm cell moves across area over time
+  const stormX = -0.3 + (hour / 24) * 0.8;
+  const stormY = 0.2 - (hour / 24) * 0.3;
   const grid: number[][] = [];
   for (let r = 0; r < GRID_SIZE; r++) {
     const row: number[] = [];
     for (let c = 0; c < GRID_SIZE; c++) {
       const cx = (c - GRID_SIZE / 2) / GRID_SIZE;
       const cy = (r - GRID_SIZE / 2) / GRID_SIZE;
-      // Clustered rainfall pattern
-      const cell1 = Math.exp(-((cx + 0.3) ** 2 + (cy - 0.2) ** 2) / 0.05) * 12;
-      const cell2 = Math.exp(-((cx - 0.25) ** 2 + (cy + 0.15) ** 2) / 0.08) * 8;
-      const noise = Math.sin(c * 2.1 + r * 1.4) * 0.5;
-      row.push(Math.max(0, cell1 + cell2 + noise + 0.3));
+      const cell1 = Math.exp(-((cx - stormX) ** 2 + (cy - stormY) ** 2) / 0.04) * 14;
+      const cell2 = Math.exp(-((cx + 0.1) ** 2 + (cy + 0.25 - hour * 0.01) ** 2) / 0.06) * 6;
+      const noise = Math.sin(c * 2.1 + r * 1.4 + hour * 0.5) * 0.5;
+      row.push(Math.max(0, cell1 + cell2 + noise));
     }
     grid.push(row);
   }
@@ -77,20 +85,18 @@ function cmapTemp(f: number): [number, number, number, number] {
   const r = Math.round(30 + f * 225);
   const g = Math.round(60 + (1 - Math.abs(f - 0.5) * 2) * 140);
   const b = Math.round(210 - f * 190);
-  return [r, g, b, 180];
+  return [r, g, b, 170];
 }
 
 function cmapWind(f: number): [number, number, number, number] {
-  // White → teal → dark blue
   const r = Math.round(240 - f * 200);
   const g = Math.round(245 - f * 120);
   const b = Math.round(250 - f * 40);
-  return [r, g, b, Math.round(60 + f * 140)];
+  return [r, g, b, Math.round(50 + f * 150)];
 }
 
 function cmapPrecip(f: number): [number, number, number, number] {
-  // Transparent → green → blue → purple
-  if (f < 0.05) return [0, 0, 0, 0];
+  if (f < 0.03) return [0, 0, 0, 0];
   const r = Math.round(f > 0.6 ? (f - 0.6) * 400 : 0);
   const g = Math.round(f < 0.5 ? f * 400 : (1 - f) * 300);
   const b = Math.round(50 + f * 200);
@@ -98,39 +104,20 @@ function cmapPrecip(f: number): [number, number, number, number] {
 }
 
 const VARIABLES: Record<string, VarConfig> = {
-  t2m: {
-    label: '2m Temperature',
-    unit: 'K',
-    generate: genTemperature,
-    colormap: cmapTemp,
-    range: [286, 308],
-  },
-  u10: {
-    label: '10m Wind Speed',
-    unit: 'm/s',
-    generate: genWind,
-    colormap: cmapWind,
-    range: [0, 12],
-  },
-  tp: {
-    label: 'Total Precipitation',
-    unit: 'mm',
-    generate: genPrecipitation,
-    colormap: cmapPrecip,
-    range: [0, 14],
-  },
+  t2m: { label: '2m Temperature', unit: 'K', generate: genTemperature, colormap: cmapTemp, range: [286, 308] },
+  u10: { label: '10m Wind Speed', unit: 'm/s', generate: genWind, colormap: cmapWind, range: [0, 12] },
+  tp: { label: 'Total Precipitation', unit: 'mm', generate: genPrecipitation, colormap: cmapPrecip, range: [0, 14] },
 };
 
-function renderHeatmapImage(varKey: string): HTMLCanvasElement {
+function renderHeatmapImage(varKey: string, hour: number): string {
   const cfg = VARIABLES[varKey];
   const canvas = document.createElement('canvas');
   canvas.width = GRID_SIZE;
   canvas.height = GRID_SIZE;
   const ctx = canvas.getContext('2d')!;
   const imgData = ctx.createImageData(GRID_SIZE, GRID_SIZE);
-  const grid = cfg.generate();
+  const grid = cfg.generate(hour);
   const [lo, hi] = cfg.range;
-
   for (let r = 0; r < GRID_SIZE; r++) {
     for (let c = 0; c < GRID_SIZE; c++) {
       const f = Math.max(0, Math.min(1, (grid[r][c] - lo) / (hi - lo)));
@@ -143,36 +130,33 @@ function renderHeatmapImage(varKey: string): HTMLCanvasElement {
     }
   }
   ctx.putImageData(imgData, 0, 0);
-  return canvas;
+  return canvas.toDataURL();
 }
 
 export function ZarrTemperatureMap() {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const [activeVar, setActiveVar] = useState('t2m');
+  const [hour, setHour] = useState(12);
   const [ready, setReady] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const playRef = useRef(false);
 
-  const updateOverlay = useCallback((varKey: string) => {
+  const updateOverlay = useCallback((varKey: string, h: number) => {
     const map = mapRef.current;
     if (!map) return;
     const source = map.getSource('heatmap');
     if (!source) return;
-
-    const heatCanvas = renderHeatmapImage(varKey);
-    // Convert canvas to image for MapLibre
-    const img = new Image();
-    img.onload = () => {
-      source.updateImage({
-        url: heatCanvas.toDataURL(),
-        coordinates: [
-          [AUSTIN.lng - GRID_EXTENT, AUSTIN.lat + GRID_EXTENT],
-          [AUSTIN.lng + GRID_EXTENT, AUSTIN.lat + GRID_EXTENT],
-          [AUSTIN.lng + GRID_EXTENT, AUSTIN.lat - GRID_EXTENT],
-          [AUSTIN.lng - GRID_EXTENT, AUSTIN.lat - GRID_EXTENT],
-        ],
-      });
-    };
-    img.src = heatCanvas.toDataURL();
+    const dataUrl = renderHeatmapImage(varKey, h);
+    source.updateImage({
+      url: dataUrl,
+      coordinates: [
+        [AUSTIN.lng - GRID_EXTENT, AUSTIN.lat + GRID_EXTENT],
+        [AUSTIN.lng + GRID_EXTENT, AUSTIN.lat + GRID_EXTENT],
+        [AUSTIN.lng + GRID_EXTENT, AUSTIN.lat - GRID_EXTENT],
+        [AUSTIN.lng - GRID_EXTENT, AUSTIN.lat - GRID_EXTENT],
+      ],
+    });
   }, []);
 
   useEffect(() => {
@@ -192,25 +176,31 @@ export function ZarrTemperatureMap() {
         const maplibregl = await import('maplibre-gl');
         if (cancelled || !containerRef.current) return;
 
-        const heatCanvas = renderHeatmapImage('t2m');
+        const initialImage = renderHeatmapImage('t2m', 12);
 
         map = new maplibregl.default.Map({
           container: containerRef.current,
           style: {
             version: 8,
+            glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
             sources: {
-              'satellite': {
+              satellite: {
                 type: 'raster',
-                tiles: [
-                  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-                ],
+                tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
                 tileSize: 256,
-                attribution: '&copy; Esri',
                 maxzoom: 18,
               },
-              'heatmap': {
+              'carto-labels': {
+                type: 'raster',
+                tiles: [
+                  'https://a.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}@2x.png',
+                  'https://b.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}@2x.png',
+                ],
+                tileSize: 256,
+              },
+              heatmap: {
                 type: 'image',
-                url: heatCanvas.toDataURL(),
+                url: initialImage,
                 coordinates: [
                   [AUSTIN.lng - GRID_EXTENT, AUSTIN.lat + GRID_EXTENT],
                   [AUSTIN.lng + GRID_EXTENT, AUSTIN.lat + GRID_EXTENT],
@@ -220,17 +210,9 @@ export function ZarrTemperatureMap() {
               },
             },
             layers: [
-              {
-                id: 'satellite',
-                type: 'raster',
-                source: 'satellite',
-              },
-              {
-                id: 'heatmap',
-                type: 'raster',
-                source: 'heatmap',
-                paint: { 'raster-opacity': 0.7, 'raster-fade-duration': 0 },
-              },
+              { id: 'satellite', type: 'raster', source: 'satellite' },
+              { id: 'heatmap', type: 'raster', source: 'heatmap', paint: { 'raster-opacity': 0.7, 'raster-fade-duration': 0 } },
+              { id: 'labels', type: 'raster', source: 'carto-labels', paint: { 'raster-opacity': 0.9 } },
             ],
           },
           center: [AUSTIN.lng, AUSTIN.lat],
@@ -241,11 +223,7 @@ export function ZarrTemperatureMap() {
         });
 
         map.addControl(new maplibregl.default.NavigationControl(), 'top-right');
-
-        map.on('load', () => {
-          setReady(true);
-        });
-
+        map.on('load', () => setReady(true));
         mapRef.current = map;
       })();
     }
@@ -263,17 +241,32 @@ export function ZarrTemperatureMap() {
     return () => {
       cancelled = true;
       observer?.disconnect();
-      if (map) {
-        map.remove();
-        mapRef.current = null;
-      }
+      if (map) { map.remove(); mapRef.current = null; }
     };
   }, []);
 
-  // Update overlay when variable changes
+  // Update overlay on var/hour change
   useEffect(() => {
-    if (ready) updateOverlay(activeVar);
-  }, [activeVar, ready, updateOverlay]);
+    if (ready) updateOverlay(activeVar, hour);
+  }, [activeVar, hour, ready, updateOverlay]);
+
+  // Play animation
+  useEffect(() => {
+    playRef.current = playing;
+    if (!playing) return;
+    let frame: number;
+    let lastTime = 0;
+    const animate = (time: number) => {
+      if (!playRef.current) return;
+      if (time - lastTime > 300) {
+        setHour(h => (h + 1) % 24);
+        lastTime = time;
+      }
+      frame = requestAnimationFrame(animate);
+    };
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+  }, [playing]);
 
   const cfg = VARIABLES[activeVar];
 
@@ -290,55 +283,13 @@ export function ZarrTemperatureMap() {
     >
       <div ref={containerRef} sx={{ width: '100%', height: '100%' }} />
 
-      {/* Variable selector */}
-      <div
-        sx={{
-          position: 'absolute',
-          bottom: 12,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          display: 'flex',
-          gap: 1,
-          bg: 'rgba(10, 10, 10, 0.85)',
-          backdropFilter: 'blur(8px)',
-          borderRadius: 6,
-          p: '4px',
-          zIndex: 10,
-        }}
-      >
-        {Object.entries(VARIABLES).map(([key, v]) => (
-          <button
-            key={key}
-            onClick={() => setActiveVar(key)}
-            sx={{
-              border: 'none',
-              borderRadius: 4,
-              px: 2,
-              py: 1,
-              fontSize: '12px',
-              fontFamily: '"Space Grotesk", system-ui, sans-serif',
-              fontWeight: activeVar === key ? 600 : 400,
-              cursor: 'pointer',
-              transition: 'all 0.15s',
-              bg: activeVar === key ? 'rgba(128, 160, 216, 0.3)' : 'transparent',
-              color: activeVar === key ? '#f4f4eb' : 'rgba(244, 244, 235, 0.5)',
-              '&:hover': {
-                bg: activeVar === key ? 'rgba(128, 160, 216, 0.3)' : 'rgba(255,255,255,0.08)',
-              },
-            }}
-          >
-            {v.label}
-          </button>
-        ))}
-      </div>
-
       {/* Info overlay */}
       <div
         sx={{
           position: 'absolute',
-          top: 12,
-          left: 12,
-          bg: 'rgba(10, 10, 10, 0.8)',
+          top: 10,
+          left: 10,
+          bg: 'rgba(10, 10, 10, 0.82)',
           backdropFilter: 'blur(8px)',
           color: '#f4f4eb',
           px: 3,
@@ -350,11 +301,126 @@ export function ZarrTemperatureMap() {
           lineHeight: 1.5,
         }}
       >
-        <div sx={{ fontWeight: 600, fontSize: '13px' }}>
-          ERA5 · {cfg.label}
+        <div sx={{ fontWeight: 600, fontSize: '13px' }}>ERA5 · {cfg.label}</div>
+        <div sx={{ opacity: 0.6, fontSize: '11px' }}>
+          {cfg.range[0]}–{cfg.range[1]} {cfg.unit} · 0.25° · {HOURS[hour]}
         </div>
-        <div sx={{ opacity: 0.6 }}>
-          {cfg.range[0]}–{cfg.range[1]} {cfg.unit} · 0.25° grid · ECMWF Zarr
+      </div>
+
+      {/* Bottom controls */}
+      <div
+        sx={{
+          position: 'absolute',
+          bottom: 10,
+          left: 10,
+          right: 10,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '6px',
+          zIndex: 10,
+        }}
+      >
+        {/* Time slider */}
+        <div
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            bg: 'rgba(10, 10, 10, 0.82)',
+            backdropFilter: 'blur(8px)',
+            borderRadius: 6,
+            px: 2,
+            py: '6px',
+          }}
+        >
+          <button
+            onClick={() => setPlaying(p => !p)}
+            sx={{
+              border: 'none',
+              bg: 'transparent',
+              color: '#f4f4eb',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontFamily: 'monospace',
+              px: 1,
+              flexShrink: 0,
+            }}
+          >
+            {playing ? '⏸' : '▶'}
+          </button>
+          <input
+            type="range"
+            min={0}
+            max={23}
+            value={hour}
+            onChange={e => { setPlaying(false); setHour(Number(e.target.value)); }}
+            sx={{
+              flex: 1,
+              height: '4px',
+              appearance: 'none',
+              bg: 'rgba(244,244,235,0.2)',
+              borderRadius: 2,
+              outline: 'none',
+              cursor: 'pointer',
+              '&::-webkit-slider-thumb': {
+                appearance: 'none',
+                width: 14,
+                height: 14,
+                borderRadius: '50%',
+                bg: '#80a0d8',
+                cursor: 'pointer',
+              },
+            }}
+          />
+          <span
+            sx={{
+              fontFamily: 'monospace',
+              fontSize: '11px',
+              color: '#f4f4eb',
+              opacity: 0.7,
+              minWidth: '60px',
+              textAlign: 'right',
+              flexShrink: 0,
+            }}
+          >
+            {HOURS[hour]}
+          </span>
+        </div>
+
+        {/* Variable selector */}
+        <div
+          sx={{
+            display: 'flex',
+            gap: 1,
+            bg: 'rgba(10, 10, 10, 0.82)',
+            backdropFilter: 'blur(8px)',
+            borderRadius: 6,
+            p: '4px',
+            justifyContent: 'center',
+          }}
+        >
+          {Object.entries(VARIABLES).map(([key, v]) => (
+            <button
+              key={key}
+              onClick={() => setActiveVar(key)}
+              sx={{
+                border: 'none',
+                borderRadius: 4,
+                px: 2,
+                py: 1,
+                fontSize: '11px',
+                fontFamily: '"Space Grotesk", system-ui, sans-serif',
+                fontWeight: activeVar === key ? 600 : 400,
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+                bg: activeVar === key ? 'rgba(128, 160, 216, 0.3)' : 'transparent',
+                color: activeVar === key ? '#f4f4eb' : 'rgba(244, 244, 235, 0.5)',
+                '&:hover': { bg: activeVar === key ? 'rgba(128, 160, 216, 0.3)' : 'rgba(255,255,255,0.08)' },
+              }}
+            >
+              {v.label}
+            </button>
+          ))}
         </div>
       </div>
     </div>

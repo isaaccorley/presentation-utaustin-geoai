@@ -69,3 +69,20 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--theme-ui-colors-textMuted, #8a8a7e);
 }
+
+/* ============================================
+   MapLibre Popup Overrides (dark theme)
+   ============================================ */
+
+.maplibregl-popup-content {
+  background: rgba(26, 15, 14, 0.92) !important;
+  border-radius: 8px !important;
+  padding: 10px 14px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(8px);
+}
+
+.maplibregl-popup-tip {
+  border-top-color: rgba(26, 15, 14, 0.92) !important;
+  border-bottom-color: rgba(26, 15, 14, 0.92) !important;
+}

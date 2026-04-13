@@ -1,23 +1,42 @@
 /** @jsxImportSource theme-ui */
 
 /**
- * Full-viewport MapLibre GL JS embed showing Overture Maps buildings via PMTiles.
- * Dark-themed to match TG brand. Flies to UT Austin campus on load.
- * Uses ResizeObserver to initialize only when the container is visible.
+ * Full-viewport MapLibre GL JS embed showing Overture Maps via PMTiles.
+ * Dark basemap + buildings colored by subtype + water/roads context layers.
+ * Hover popup with building details. Flies to UT Austin campus on load.
  */
 
 import { useEffect, useRef } from 'react';
 
-const OVERTURE_BUILDINGS_URL =
-  'https://overturemaps-tiles-us-west-2-beta.s3.amazonaws.com/2026-01-21/buildings.pmtiles';
+const OVERTURE_BASE = 'https://overturemaps-tiles-us-west-2-beta.s3.amazonaws.com/2026-01-21';
+const BUILDINGS_URL = `${OVERTURE_BASE}/buildings.pmtiles`;
+const BASE_URL = `${OVERTURE_BASE}/base.pmtiles`;
+const TRANSPORT_URL = `${OVERTURE_BASE}/transportation.pmtiles`;
 
 const UT_AUSTIN = { lng: -97.7365, lat: 30.2849 };
+
+// Building subtype → fill color
+const SUBTYPE_COLORS: [string, string][] = [
+  ['education', '#f59e0b'],
+  ['civic', '#a78bfa'],
+  ['commercial', '#60a5fa'],
+  ['residential', '#6ee7b7'],
+  ['industrial', '#f87171'],
+  ['medical', '#fb923c'],
+  ['religious', '#e879f9'],
+  ['entertainment', '#fbbf24'],
+  ['transportation', '#94a3b8'],
+  ['military', '#78716c'],
+  ['agricultural', '#86efac'],
+  ['service', '#67e8f9'],
+];
 
 let protocolRegistered = false;
 
 export function MapLibreEmbed() {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
+  const popupRef = useRef<any>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -29,8 +48,6 @@ export function MapLibreEmbed() {
 
     function initMap() {
       if (cancelled || !containerRef.current || mapRef.current) return;
-
-      // Don't init if container has zero dimensions (hidden slide)
       const rect = containerRef.current.getBoundingClientRect();
       if (rect.width === 0 || rect.height === 0) return;
 
@@ -48,6 +65,13 @@ export function MapLibreEmbed() {
           protocolRegistered = true;
         }
 
+        // Build match expression for subtype colors
+        const colorMatch: any[] = ['match', ['get', 'subtype']];
+        for (const [subtype, color] of SUBTYPE_COLORS) {
+          colorMatch.push(subtype, color);
+        }
+        colorMatch.push('#80a0d8'); // fallback
+
         map = new maplibregl.default.Map({
           container: containerRef.current,
           style: {
@@ -62,39 +86,100 @@ export function MapLibreEmbed() {
                   'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
                 ],
                 tileSize: 256,
-                attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+                attribution: '&copy; CARTO &copy; OSM',
+              },
+              base: {
+                type: 'vector',
+                url: `pmtiles://${BASE_URL}`,
+              },
+              transportation: {
+                type: 'vector',
+                url: `pmtiles://${TRANSPORT_URL}`,
               },
               buildings: {
                 type: 'vector',
-                url: `pmtiles://${OVERTURE_BUILDINGS_URL}`,
+                url: `pmtiles://${BUILDINGS_URL}`,
               },
             },
             layers: [
+              // Dark basemap
               {
                 id: 'basemap',
                 type: 'raster',
                 source: 'carto-dark',
-                paint: { 'raster-opacity': 0.85 },
+                paint: { 'raster-opacity': 0.7 },
               },
+              // Water
+              {
+                id: 'water-fill',
+                type: 'fill',
+                source: 'base',
+                'source-layer': 'water',
+                paint: {
+                  'fill-color': '#1a3a5c',
+                  'fill-opacity': 0.6,
+                },
+              },
+              // Roads — major
+              {
+                id: 'roads-major',
+                type: 'line',
+                source: 'transportation',
+                'source-layer': 'segment',
+                filter: ['in', 'class', 'motorway', 'trunk', 'primary'],
+                paint: {
+                  'line-color': '#4a4540',
+                  'line-width': ['interpolate', ['linear'], ['zoom'], 10, 0.5, 14, 2, 17, 4],
+                  'line-opacity': 0.6,
+                },
+              },
+              // Roads — secondary
+              {
+                id: 'roads-secondary',
+                type: 'line',
+                source: 'transportation',
+                'source-layer': 'segment',
+                filter: ['in', 'class', 'secondary', 'tertiary'],
+                minzoom: 12,
+                paint: {
+                  'line-color': '#3a3530',
+                  'line-width': ['interpolate', ['linear'], ['zoom'], 12, 0.3, 17, 2],
+                  'line-opacity': 0.4,
+                },
+              },
+              // Buildings — fill colored by subtype
               {
                 id: 'buildings-fill',
                 type: 'fill',
                 source: 'buildings',
                 'source-layer': 'building',
                 paint: {
-                  'fill-color': '#80a0d8',
-                  'fill-opacity': ['interpolate', ['linear'], ['zoom'], 10, 0.15, 14, 0.4, 17, 0.6],
+                  'fill-color': colorMatch,
+                  'fill-opacity': ['interpolate', ['linear'], ['zoom'], 10, 0.15, 14, 0.35, 17, 0.55],
                 },
               },
+              // Buildings — outline
               {
                 id: 'buildings-outline',
                 type: 'line',
                 source: 'buildings',
                 'source-layer': 'building',
+                minzoom: 14,
                 paint: {
-                  'line-color': '#a7d0dc',
-                  'line-width': ['interpolate', ['linear'], ['zoom'], 13, 0.2, 17, 0.8],
-                  'line-opacity': ['interpolate', ['linear'], ['zoom'], 10, 0.1, 15, 0.4],
+                  'line-color': 'rgba(244, 244, 235, 0.15)',
+                  'line-width': ['interpolate', ['linear'], ['zoom'], 14, 0.2, 17, 0.6],
+                },
+              },
+              // Buildings — hover highlight (filtered to nothing by default)
+              {
+                id: 'buildings-highlight',
+                type: 'fill',
+                source: 'buildings',
+                'source-layer': 'building',
+                filter: ['==', 'id', ''],
+                paint: {
+                  'fill-color': '#ffffff',
+                  'fill-opacity': 0.3,
                 },
               },
             ],
@@ -107,6 +192,52 @@ export function MapLibreEmbed() {
 
         map.addControl(new maplibregl.default.AttributionControl({ compact: true }), 'bottom-left');
         map.addControl(new maplibregl.default.NavigationControl(), 'top-right');
+
+        // Popup for hover
+        const popup = new maplibregl.default.Popup({
+          closeButton: false,
+          closeOnClick: false,
+          maxWidth: '280px',
+          offset: 12,
+        });
+        popupRef.current = popup;
+
+        // Hover interaction
+        map.on('mousemove', 'buildings-fill', (e: any) => {
+          if (!e.features || e.features.length === 0) return;
+          map.getCanvas().style.cursor = 'pointer';
+
+          const f = e.features[0];
+          const p = f.properties;
+
+          // Highlight building
+          map.setFilter('buildings-highlight', ['==', 'id', f.properties.id || '']);
+
+          // Build popup HTML
+          const name = p['@name'] || p.class || 'Building';
+          const rows: string[] = [];
+
+          if (p.subtype) rows.push(`<b>Type:</b> ${p.subtype}${p.class ? ` / ${p.class}` : ''}`);
+          if (p.height) rows.push(`<b>Height:</b> ${Number(p.height).toFixed(1)}m`);
+          if (p.num_floors) rows.push(`<b>Floors:</b> ${p.num_floors}`);
+          if (p.roof_shape) rows.push(`<b>Roof:</b> ${p.roof_shape}`);
+          if (p.facade_material) rows.push(`<b>Facade:</b> ${p.facade_material}`);
+
+          const html = `
+            <div style="font-family:'Space Grotesk',system-ui,sans-serif;font-size:13px;line-height:1.5;color:#f4f4eb">
+              <div style="font-weight:700;font-size:14px;margin-bottom:4px;color:#fff">${name}</div>
+              ${rows.length ? rows.join('<br/>') : '<span style="opacity:0.5">No metadata</span>'}
+            </div>
+          `;
+
+          popup.setLngLat(e.lngLat).setHTML(html).addTo(map);
+        });
+
+        map.on('mouseleave', 'buildings-fill', () => {
+          map.getCanvas().style.cursor = '';
+          map.setFilter('buildings-highlight', ['==', 'id', '']);
+          popup.remove();
+        });
 
         map.on('load', () => {
           map.flyTo({
@@ -121,7 +252,6 @@ export function MapLibreEmbed() {
       })();
     }
 
-    // Use ResizeObserver to detect when container becomes visible
     observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
         if (entry.contentRect.width > 0 && entry.contentRect.height > 0 && !mapRef.current) {
@@ -130,13 +260,12 @@ export function MapLibreEmbed() {
       }
     });
     observer.observe(containerRef.current);
-
-    // Try immediately in case already visible
     initMap();
 
     return () => {
       cancelled = true;
       observer?.disconnect();
+      popupRef.current?.remove();
       if (map) {
         map.remove();
         mapRef.current = null;
@@ -157,6 +286,8 @@ export function MapLibreEmbed() {
       }}
     >
       <div ref={containerRef} sx={{ width: '100%', height: '100%' }} />
+
+      {/* Title badge */}
       <div
         sx={{
           position: 'absolute',
@@ -174,6 +305,35 @@ export function MapLibreEmbed() {
         }}
       >
         <strong>Overture Maps</strong> — 2.6B building footprints via PMTiles
+      </div>
+
+      {/* Legend */}
+      <div
+        sx={{
+          position: 'absolute',
+          bottom: 40,
+          right: 16,
+          bg: 'rgba(26, 15, 14, 0.85)',
+          backdropFilter: 'blur(8px)',
+          color: '#f4f4eb',
+          px: 3,
+          py: 2,
+          borderRadius: 6,
+          fontFamily: '"Space Grotesk", system-ui, sans-serif',
+          fontSize: '11px',
+          zIndex: 999,
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '3px 12px',
+          lineHeight: 1.6,
+        }}
+      >
+        {SUBTYPE_COLORS.slice(0, 8).map(([label, color]) => (
+          <div key={label} sx={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span sx={{ width: 8, height: 8, borderRadius: 2, bg: color, flexShrink: 0 }} />
+            {label}
+          </div>
+        ))}
       </div>
     </div>
   );
