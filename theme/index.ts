@@ -125,7 +125,7 @@ const theme: Theme = {
       mb: 2,
     },
     p: {
-      fontSize: 6,
+      fontSize: 3,
       lineHeight: 'normal',
       mt: 0,
       mb: 3,
@@ -138,7 +138,7 @@ const theme: Theme = {
       },
     },
     ul: {
-      fontSize: 6,
+      fontSize: 3,
       lineHeight: 'relaxed',
       pl: 5,
       mt: 0,
@@ -160,7 +160,7 @@ const theme: Theme = {
       },
     },
     ol: {
-      fontSize: 6,
+      fontSize: 3,
       lineHeight: 'relaxed',
       pl: 5,
       mt: 0,

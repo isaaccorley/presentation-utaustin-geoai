@@ -101,7 +101,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     p: (props) => (
       <p
         sx={{
-          fontSize: 4,
+          fontSize: 3,
           lineHeight: 'normal',
           mt: 0,
           mb: 3,
@@ -113,7 +113,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     ul: (props) => (
       <ul
         sx={{
-          fontSize: 4,
+          fontSize: 3,
           lineHeight: 'relaxed',
           pl: 5,
           mt: 0,
@@ -140,7 +140,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     ol: (props) => (
       <ol
         sx={{
-          fontSize: 4,
+          fontSize: 3,
           lineHeight: 'relaxed',
           pl: 5,
           mt: 0,
@@ -179,7 +179,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
           borderRadius: 'sm',
           color: 'textSecondary',
           fontStyle: 'italic',
-          fontSize: 4,
+          fontSize: 3,
           '& p': { m: 0, fontSize: 'inherit' },
         }}
         {...props}
