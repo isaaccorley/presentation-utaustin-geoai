@@ -23,7 +23,7 @@ export default function App({ Component, pageProps }: AppProps) {
   // Only wrap pages under /decks/ with the slide Deck engine.
   // Match both /decks/slug and exactly /decks to avoid false positives
   // like a hypothetical /decks-archive page.
-  const isDeckPage = router.pathname === '/decks' || router.pathname.startsWith('/decks/');
+  const isDeckPage = router.pathname === '/' || router.pathname === '/decks' || router.pathname.startsWith('/decks/');
 
   if (isDeckPage) {
     return (
