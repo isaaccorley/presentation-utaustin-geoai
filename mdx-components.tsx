@@ -45,7 +45,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
         sx={{
           fontFamily: 'heading',
           fontWeight: 'bold',
-          fontSize: [7, 8],
+          fontSize: 6,
           lineHeight: 'tight',
           mt: 0,
           mb: 4,
@@ -60,7 +60,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
         sx={{
           fontFamily: 'heading',
           fontWeight: 'bold',
-          fontSize: [6, 7],
+          fontSize: 5,
           lineHeight: 'tight',
           mt: 0,
           mb: 3,
@@ -75,7 +75,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
         sx={{
           fontFamily: 'heading',
           fontWeight: 'medium',
-          fontSize: 5,
+          fontSize: 4,
           lineHeight: 'snug',
           mt: 0,
           mb: 3,
@@ -89,7 +89,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
         sx={{
           fontFamily: 'heading',
           fontWeight: 'medium',
-          fontSize: 4,
+          fontSize: 3,
           lineHeight: 'snug',
           mt: 0,
           mb: 2,
