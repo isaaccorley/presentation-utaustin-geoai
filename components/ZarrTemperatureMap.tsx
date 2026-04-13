@@ -139,7 +139,7 @@ export function ZarrTemperatureMap() {
   const [activeVar, setActiveVar] = useState('t2m');
   const [hour, setHour] = useState(12);
   const [ready, setReady] = useState(false);
-  const [playing, setPlaying] = useState(false);
+  const [playing, setPlaying] = useState(true);
   const playRef = useRef(false);
 
   const updateOverlay = useCallback((varKey: string, h: number) => {
@@ -258,7 +258,7 @@ export function ZarrTemperatureMap() {
     let lastTime = 0;
     const animate = (time: number) => {
       if (!playRef.current) return;
-      if (time - lastTime > 300) {
+      if (time - lastTime > 1000) {
         setHour(h => (h + 1) % 24);
         lastTime = time;
       }
@@ -305,6 +305,56 @@ export function ZarrTemperatureMap() {
         <div sx={{ opacity: 0.6, fontSize: '11px' }}>
           {cfg.range[0]}–{cfg.range[1]} {cfg.unit} · 0.25° · {HOURS[hour]}
         </div>
+      </div>
+
+      {/* Colorbar */}
+      <div
+        sx={{
+          position: 'absolute',
+          top: 10,
+          right: 44,
+          bg: 'rgba(10, 10, 10, 0.82)',
+          backdropFilter: 'blur(8px)',
+          borderRadius: 6,
+          px: '10px',
+          py: 2,
+          zIndex: 10,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '2px',
+        }}
+      >
+        <span sx={{ fontFamily: 'monospace', fontSize: '10px', color: '#f4f4eb', opacity: 0.7 }}>
+          {cfg.range[1]} {cfg.unit}
+        </span>
+        <div
+          sx={{
+            width: 14,
+            height: 120,
+            borderRadius: 2,
+            overflow: 'hidden',
+            border: '1px solid rgba(244,244,235,0.15)',
+          }}
+        >
+          {Array.from({ length: 40 }, (_, i) => {
+            const f = 1 - i / 39;
+            const [r, g, b, a] = cfg.colormap(f);
+            return (
+              <div
+                key={i}
+                sx={{
+                  width: '100%',
+                  height: '2.5%',
+                  bg: `rgba(${r},${g},${b},${a / 255})`,
+                }}
+              />
+            );
+          })}
+        </div>
+        <span sx={{ fontFamily: 'monospace', fontSize: '10px', color: '#f4f4eb', opacity: 0.7 }}>
+          {cfg.range[0]} {cfg.unit}
+        </span>
       </div>
 
       {/* Bottom controls */}

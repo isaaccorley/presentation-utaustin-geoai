@@ -362,13 +362,13 @@ Streaming COGs directly from Azure blob storage.
 
 ---
 
-<Columns cols={2} gap={4} align="center">
+<Columns cols={2} gap={4} align="center" ratio="1fr 1fr">
 <div>
 
 <Img
   src="/images/utaustin-rgb.png"
   alt="True color RGB of UT Austin from Sentinel-2"
-  style={{ width: '100%', borderRadius: 6 }}
+  style={{ width: '100%', maxHeight: '70vh', objectFit: 'contain', borderRadius: 6 }}
 />
 
 </div>
@@ -391,7 +391,7 @@ You can make out the stadium, major roads, and green spaces — but at 10m pixel
 <Img
   src="/images/utaustin-nir.png"
   alt="False color NIR composite of UT Austin campus"
-  style={{ width: '100%', maxHeight: '55vh', objectFit: 'contain', borderRadius: 6 }}
+  style={{ width: '100%', maxHeight: '72vh', objectFit: 'contain', borderRadius: 6 }}
 />
 
 **False Color (NIR-R-G)** — vegetation appears bright red
@@ -402,7 +402,7 @@ You can make out the stadium, major roads, and green spaces — but at 10m pixel
 <Img
   src="/images/utaustin-ndvi.png"
   alt="NDVI map of UT Austin campus"
-  style={{ width: '100%', maxHeight: '55vh', objectFit: 'contain', borderRadius: 6 }}
+  style={{ width: '100%', maxHeight: '72vh', objectFit: 'contain', borderRadius: 6 }}
 />
 
 **NDVI** — green = vegetation, brown = bare/built
