@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { ThemeUIProvider } from 'theme-ui';
 import { Deck } from '../components/Deck';
 import theme from '../theme';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import '../styles/globals.css';
 
 /**

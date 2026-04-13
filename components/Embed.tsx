@@ -22,12 +22,13 @@ export function Embed({ src, title = 'Embedded content', clip = false }: EmbedPr
   return (
     <div
       sx={{
-        position: 'absolute',
+        position: 'fixed',
         top: 0,
         left: 0,
         width: '100vw',
         height: clip ? 'calc(100vh - 48px)' : '100vh',
         overflow: 'hidden',
+        zIndex: 998,
       }}
     >
       <iframe

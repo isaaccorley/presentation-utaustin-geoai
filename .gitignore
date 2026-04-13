@@ -33,3 +33,10 @@ next-env.d.ts
 video/media/
 video/__pycache__/
 video/frames/
+
+# claude code
+.claude/settings.local.json
+
+# playwright
+test-results/
+cloud-native-geospatial-keynote.pptx

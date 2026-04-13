@@ -46,7 +46,7 @@ export function CodeBlock({ children, className, title }: CodeBlockProps) {
         border: '1px solid var(--theme-ui-colors-subtle)',
         overflow: 'hidden',
         my: 3,
-        fontSize: 1,
+        fontSize: 2,
         position: 'relative',
         '&::before': {
           content: '""',

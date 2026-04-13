@@ -5,11 +5,17 @@ import { CodeBlock } from './components/CodeBlock';
 import { Columns } from './components/Columns';
 import { Diagram } from './components/Diagram';
 import { Embed } from './components/Embed';
+import { Img } from './components/Img';
 import { Logo } from './components/Logo';
-import { Video } from './components/Video';
+import { MapLibreEmbed } from './components/MapLibreEmbed';
+import { PMTilesEmbed } from './components/PMTilesEmbed';
+import { QRGrid } from './components/QRGrid';
 import { SectionSlide } from './components/SectionSlide';
 import { SpeakerNotes } from './components/SpeakerNotes';
+import { TerminalReplay } from './components/TerminalReplay';
 import { TitleSlide } from './components/TitleSlide';
+import { Video } from './components/Video';
+import { ZarrTemperatureMap } from './components/ZarrTemperatureMap';
 
 /**
  * MDX component overrides for Next.js.
@@ -22,14 +28,21 @@ import { TitleSlide } from './components/TitleSlide';
  * all content renders as a single function component that can't be split
  * at the React element level.
  */
+const bp = process.env.NEXT_PUBLIC_BASE_PATH || '';
+
 export function useMDXComponents(components: MDXComponents): MDXComponents {
   return {
     ...components,
-    // Override <hr> to render a slide-separator marker.
-    // The Deck component uses `data-slide-separator` to split content into slides.
     hr: (props: React.DetailedHTMLProps<React.HTMLAttributes<HTMLHRElement>, HTMLHRElement>) => (
       <hr {...props} data-slide-separator="" />
     ),
+    img: (
+      props: React.DetailedHTMLProps<React.ImgHTMLAttributes<HTMLImageElement>, HTMLImageElement>,
+    ) => {
+      const src = props.src?.startsWith('/') ? `${bp}${props.src}` : props.src;
+      // eslint-disable-next-line @next/next/no-img-element
+      return <img {...props} src={src} alt={props.alt || ''} />;
+    },
     // Override <pre> to use our CodeBlock
     pre: ({
       children,
@@ -50,6 +63,12 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     Logo,
     SpeakerNotes,
     Diagram,
+    Img,
     Video,
+    MapLibreEmbed,
+    PMTilesEmbed,
+    QRGrid,
+    TerminalReplay,
+    ZarrTemperatureMap,
   };
 }

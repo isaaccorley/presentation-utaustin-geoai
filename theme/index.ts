@@ -93,17 +93,16 @@ const theme: Theme = {
     h1: {
       fontFamily: 'heading',
       fontWeight: 'heading',
-      fontSize: [7, 8],
+      fontSize: [6, 7, 8],
       lineHeight: 'tight',
       mt: 0,
       mb: 4,
       letterSpacing: '-0.02em',
-      maxWidth: '75%',
     },
     h2: {
       fontFamily: 'heading',
       fontWeight: 'heading',
-      fontSize: [6, 7],
+      fontSize: [5, 6, 7],
       lineHeight: 'tight',
       mt: 0,
       mb: 3,
@@ -126,11 +125,10 @@ const theme: Theme = {
       mb: 2,
     },
     p: {
-      fontSize: 4,
+      fontSize: [3, 4],
       lineHeight: 'normal',
       mt: 0,
       mb: 3,
-      maxWidth: '70ch',
     },
     a: {
       color: 'accent',
@@ -140,12 +138,11 @@ const theme: Theme = {
       },
     },
     ul: {
-      fontSize: 4,
+      fontSize: [3, 4],
       lineHeight: 'relaxed',
       pl: 5,
       mt: 0,
       mb: 3,
-      maxWidth: '70ch',
       listStyleType: 'none',
       '& > li': {
         position: 'relative',
@@ -163,12 +160,11 @@ const theme: Theme = {
       },
     },
     ol: {
-      fontSize: 4,
+      fontSize: [3, 4],
       lineHeight: 'relaxed',
       pl: 5,
       mt: 0,
       mb: 3,
-      maxWidth: '70ch',
       counterReset: 'ol-counter',
       listStyleType: 'none',
       '& > li': {
@@ -213,7 +209,7 @@ const theme: Theme = {
     },
     pre: {
       fontFamily: 'monospace',
-      fontSize: 1,
+      fontSize: 3,
       lineHeight: 'normal',
       bg: 'surface',
       color: 'text',

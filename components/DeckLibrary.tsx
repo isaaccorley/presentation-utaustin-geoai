@@ -20,7 +20,8 @@ export const deckManifest: DeckEntry[] = [
   {
     slug: 'utaustin-geoai',
     title: 'GeoAI & Cloud-Native Geospatial',
-    description: 'Building tools with AI coding agents — UT Austin talk on cloud-native geospatial formats, GeoAI pipelines, and building with Claude & Codex.',
+    description:
+      'Building tools with AI coding agents — UT Austin talk on cloud-native geospatial formats, GeoAI pipelines, and building with Claude & Codex.',
     author: 'Isaac Corley',
     date: 'April 2026',
     tags: ['geoai', 'cloud-native', 'claude', 'torchgeo'],

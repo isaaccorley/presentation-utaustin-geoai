@@ -1,5 +1,7 @@
 /** @jsxImportSource theme-ui */
 
+const bp = process.env.NEXT_PUBLIC_BASE_PATH || '';
+
 export interface VideoProps {
   src: string;
   poster?: string;
@@ -8,40 +10,28 @@ export interface VideoProps {
   title?: string;
 }
 
-export function Video({
-  src,
-  poster,
-  autoPlay = false,
-  loop = false,
-  title,
-}: VideoProps) {
+export function Video({ src, poster, autoPlay = true, loop = true, title }: VideoProps) {
+  const resolvedSrc = src.startsWith('/') ? `${bp}${src}` : src;
+  const resolvedPoster = poster?.startsWith('/') ? `${bp}${poster}` : poster;
+
   return (
-    <div
+    <video
+      src={resolvedSrc}
+      poster={resolvedPoster}
+      autoPlay={autoPlay}
+      loop={loop}
+      muted
+      controls
+      playsInline
+      title={title}
       sx={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '100vh',
-        overflow: 'hidden',
-        bg: 'black',
+        width: '100%',
+        height: 'auto',
+        maxHeight: '72vh',
+        borderRadius: 6,
+        objectFit: 'contain',
+        bg: 'background',
       }}
-    >
-      <video
-        src={src}
-        poster={poster}
-        autoPlay={autoPlay}
-        loop={loop}
-        muted
-        controls
-        playsInline
-        title={title}
-        sx={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'contain',
-        }}
-      />
-    </div>
+    />
   );
 }
