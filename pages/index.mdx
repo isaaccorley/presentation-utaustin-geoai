@@ -35,16 +35,6 @@ export const meta = {
 
 ---
 
-# Agenda
-
-1. **Cloud-Native Geospatial** — the data stack that replaced download-and-process
-2. **GeoAI — What's Out There** — foundation models, self-supervised learning, benchmarks
-3. **GeoAI Pipelines** — from model to product at scale
-4. **Building with AI Agents** — Claude Code, MCP, and the tools I've shipped
-5. **The Bigger Picture** — the flywheel and what you can do today
-
----
-
 <SectionSlide backgroundImage="/images/landsat-brown-1.webp" kicker="Section 01">
 
 ## Cloud-Native Geospatial
@@ -58,9 +48,9 @@ export const meta = {
 
 ## Old Way vs New Way
 
-**Download everything:** 47 GB → convert → clip → load → ~45 min
+**Download everything:** **47 GB** → convert → clip → load → **~45 min**
 
-**Stream what you need:** range-read AOI tiles → decode → ~3 sec
+**Stream what you need:** range-read AOI tiles → decode → **~3 sec**
 
 **900x faster.** No servers, no disk, no format conversion.
 
@@ -143,9 +133,9 @@ on GitHub — community-driven standards that actually ship.
 - **2.6 billion buildings** — Overture Maps (up from 785M in 2023)
 - **119 million field boundaries** — fiboa / Fields of The World
 - **104 million places** — Foursquare Open Places (GeoParquet)
-- **Petabytes of climate data** — ERA5, CMIP6 in Zarr
-- **Trillions of LiDAR points** — USGS 3DEP as COPC
-- **Hundreds of millions of embeddings** — Clay, EarthIndex, Major TOM
+- **Petabytes** of climate data — ERA5, CMIP6 in Zarr
+- **Trillions** of LiDAR points — USGS 3DEP as COPC
+- **Hundreds of millions** of embeddings — Clay, EarthIndex, Major TOM
 
 > All streamable from object storage. No servers needed.
 
@@ -456,7 +446,7 @@ At 1m you can see individual trees and rooftops.
 
 # Geospatial Foundation Models
 
-Like pretraining LLMs on all internet text, the goal is to **build a generalist geospatial model that can process all modalities** and then either produce embeddings or be fine-tuned downstream.
+Like pretraining LLMs on all internet text, the goal is to **build a generalist geospatial model** that can process **all modalities** and then either produce embeddings or be fine-tuned downstream.
 
 **RGB, MSI, SAR, HSI, climate, weather, and more.**
 
@@ -483,10 +473,10 @@ Examples here are Prithvi, AlphaEarth, TESSERA, Clay, SeCo, and a lot more.
 
 # What Doesn't Work Yet
 
-- **No single model dominates** — GEO-Bench shows no FM consistently beats task-specific baselines
-- **Geographic bias** — Prithvi v1.0 was US-only; Clay and DOFA have better global coverage but still patchy
-- **Resolution loss** — MAE-based ViTs downsample 4–5x (224px input → 14×14 patches)
-- **Mostly optical** — HSI and climate/weather data remain underserved (DOFA is the exception)
+- **No single model dominates** — **GEO-Bench** shows no FM consistently beats task-specific baselines
+- **Geographic bias** — **Prithvi v1.0** was US-only; Clay and DOFA have better global coverage but still patchy
+- **Resolution loss** — **MAE-based ViTs** downsample 4–5x (224px input → 14×14 patches)
+- **Mostly optical** — **HSI** and climate/weather data remain underserved (DOFA is the exception)
 - **Supervised baselines still win** on well-labeled regional tasks
 - **Most pretraining uses freely available data** — don't expect it to work on high-resolution commercial imagery yet
 
@@ -745,7 +735,7 @@ FieldsofThe.World inference app — a full-page web embed for the talk deck.
 
 - Encode satellite tiles into **binary vectors**
 - Nearest neighbor search via **Hamming distance**
-- Search billions of embeddings in milliseconds
+- Search **billions** of embeddings in **milliseconds**
 - Powers **isaac.earth/terrabit**
 
 </div>
@@ -769,7 +759,7 @@ then find nearest neighbors using Hamming distance.
 
 <SectionSlide backgroundImage="/images/landsat-brown-1.webp" kicker="Section 04">
 
-## Building with AI Agents
+## How I Ship Geospatial Products Today
 
 </SectionSlide>
 
@@ -919,22 +909,18 @@ they're a feedback loop. Chris Holmes calls this the Global Spatial Data Ecosyst
 # What You Can Do Today
 
 <Columns cols={2} gap={5}>
-<div>
+<div style={{ fontSize: '1.18em', lineHeight: 1.35 }}>
 
 **With cloud-native data**
-- Search petabytes with `pystac-client`
-- Load data with `odc.stac` or `stackstac`
-- Query vectors with DuckDB
-- Visualize with MapLibre + PMTiles
+- **Search** petabytes with `pystac-client`
+- **Load** data with `odc.stac` or `stackstac`
 
 </div>
-<div>
+<div style={{ fontSize: '1.18em', lineHeight: 1.35 }}>
 
 **With GeoAI**
-- Fine-tune foundation models with TorchGeo
-- Build retrieval systems with embeddings
-- Segment at scale with PRUE patterns
-- Use AI agents to build the tools faster
+- **Build** retrieval systems with embeddings
+- **Fine-tune** foundation models with TorchGeo
 
 </div>
 </Columns>
@@ -954,11 +940,9 @@ open-source and accessible.
 >
   <QRGrid
     layout="row"
-    size={180}
+    size={235}
     items={[
       { url: 'https://isaac.earth', label: 'isaac.earth' },
-      { url: 'https://github.com/isaaccorley', label: 'GitHub' },
-      { url: 'https://geospatialml.substack.com/subscribe', label: 'Subscribe to my Blog' },
     ]}
   />
 </TitleSlide>
