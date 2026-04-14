@@ -25,13 +25,15 @@ export function Slide({ children }: SlideProps) {
         height: '100vh',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'center',
-        px: [5, 6, 7],
-        py: [5, 6],
+        justifyContent: ['flex-start', 'center'],
+        px: [3, 5, 7],
+        py: [3, 5, 6],
+        pb: [10, 6],
         boxSizing: 'border-box',
         position: 'relative',
         overflowX: 'hidden',
         overflowY: ['auto', 'hidden'],
+        touchAction: 'pan-y',
       }}
     >
       {/* Subtle radial gradient for depth */}
@@ -51,7 +53,7 @@ export function Slide({ children }: SlideProps) {
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'center',
+          justifyContent: ['flex-start', 'center'],
           position: 'relative',
           zIndex: 1,
         }}

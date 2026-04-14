@@ -6,6 +6,12 @@ export interface SlideNavProps {
   current: number;
   /** Total number of slides */
   total: number;
+  /** Go to previous slide */
+  onPrev: () => void;
+  /** Go to next slide */
+  onNext: () => void;
+  /** Whether the viewport is narrow enough to use mobile controls */
+  isMobile?: boolean;
   /** When true, nav is completely hidden (cover/section/close slides) */
   hidden?: boolean;
 }
@@ -14,21 +20,29 @@ export interface SlideNavProps {
  * Minimal slide counter fixed to the bottom-right.
  * Hidden on cover, section, and closing slides.
  */
-export function SlideNav({ current, total, hidden = false }: SlideNavProps) {
+export function SlideNav({
+  current,
+  total,
+  onPrev,
+  onNext,
+  isMobile = false,
+  hidden = false,
+}: SlideNavProps) {
   const [colorMode, setColorMode] = useColorMode();
 
   const toggleMode = () => {
     setColorMode(colorMode === 'light' ? 'dark' : 'light');
   };
 
-  if (hidden) return null;
+  if (hidden && !isMobile) return null;
 
   return (
     <div
       sx={{
         position: 'fixed',
-        bottom: 0,
-        right: 0,
+        bottom: [3, 0],
+        right: [3, 0],
+        left: [3, 'auto'],
         display: 'flex',
         alignItems: 'center',
         gap: 3,
@@ -44,14 +58,78 @@ export function SlideNav({ current, total, hidden = false }: SlideNavProps) {
         '&:hover': {
           opacity: 1,
         },
+        '@media (max-width: 767px)': {
+          left: 12,
+          right: 12,
+          bottom: 12,
+          justifyContent: 'space-between',
+          bg: 'rgba(27, 24, 21, 0.72)',
+          backdropFilter: 'blur(12px)',
+          borderRadius: 9999,
+          opacity: 1,
+        },
         '@media print': {
           display: 'none',
         },
       }}
     >
+      <button
+        type="button"
+        onClick={onPrev}
+        aria-label="Previous slide"
+        sx={{
+          appearance: 'none',
+          bg: 'transparent',
+          border: 'none',
+          cursor: 'pointer',
+          p: 0,
+          width: 44,
+          height: 44,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'textMuted',
+          transition: 'color 0.2s ease',
+          '&:hover': {
+            color: 'text',
+          },
+        }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+        </svg>
+      </button>
+
       <span sx={{ fontVariantNumeric: 'tabular-nums' }}>
         {current}/{total}
       </span>
+
+      <button
+        type="button"
+        onClick={onNext}
+        aria-label="Next slide"
+        sx={{
+          appearance: 'none',
+          bg: 'transparent',
+          border: 'none',
+          cursor: 'pointer',
+          p: 0,
+          width: 44,
+          height: 44,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'textMuted',
+          transition: 'color 0.2s ease',
+          '&:hover': {
+            color: 'text',
+          },
+        }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="m8.59 16.59 1.41 1.41 6-6-6-6-1.41 1.41L12.17 12z" />
+        </svg>
+      </button>
 
       <button
         type="button"

@@ -24,8 +24,8 @@ export function Columns({ cols = 2, gap = 6, children, align = 'start', ratio }:
     <div
       sx={{
         display: 'grid',
-        gridTemplateColumns: ratio || `repeat(${cols}, 1fr)`,
-        gap,
+        gridTemplateColumns: ['1fr', ratio || `repeat(${cols}, 1fr)`],
+        gap: [4, gap],
         alignItems: align,
         width: '100%',
         '& > *': {

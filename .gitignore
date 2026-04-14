@@ -42,4 +42,6 @@ video/frames/
 
 # playwright
 test-results/
+.playwright-cli/
+output/
 cloud-native-geospatial-keynote.pptx

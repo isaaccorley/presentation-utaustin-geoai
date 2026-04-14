@@ -138,9 +138,11 @@ export function Deck({ children }: DeckProps) {
   const [showNotes, setShowNotes] = useState(false);
   const [totalSlides, setTotalSlides] = useState(1);
   const [slideType, setSlideType] = useState<string | null>(null);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
   const [colorMode, setColorMode] = useColorMode();
 
   const contentRef = useRef<HTMLDivElement>(null);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   // Navigate to a specific slide and update the URL hash
   const goToSlide = useCallback((index: number) => {
@@ -155,6 +157,23 @@ export function Deck({ children }: DeckProps) {
     const params = new URLSearchParams(window.location.search);
     setPrintMode(params.get('print') === 'true');
     setShowNotes(params.get('notes') === 'true');
+  }, []);
+
+  // -----------------------------------------------------------------------
+  // Mobile viewport detection
+  // -----------------------------------------------------------------------
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 767px)');
+    const update = () => setIsMobileViewport(mediaQuery.matches);
+    update();
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', update);
+      return () => mediaQuery.removeEventListener('change', update);
+    }
+
+    mediaQuery.addListener(update);
+    return () => mediaQuery.removeListener(update);
   }, []);
 
   // -----------------------------------------------------------------------
@@ -279,6 +298,48 @@ export function Deck({ children }: DeckProps) {
   }, [currentSlide, totalSlides, goToSlide, colorMode, setColorMode]);
 
   // -----------------------------------------------------------------------
+  // Touch navigation
+  // -----------------------------------------------------------------------
+  useEffect(() => {
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      const touch = e.touches[0];
+      touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      const start = touchStartRef.current;
+      if (!start || e.changedTouches.length !== 1) {
+        touchStartRef.current = null;
+        return;
+      }
+
+      const touch = e.changedTouches[0];
+      const dx = touch.clientX - start.x;
+      const dy = touch.clientY - start.y;
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
+
+      touchStartRef.current = null;
+
+      if (absX < 60 || absX < absY) return;
+
+      if (dx < 0) {
+        goToSlide(Math.min(currentSlide + 1, totalSlides - 1));
+      } else {
+        goToSlide(Math.max(currentSlide - 1, 0));
+      }
+    };
+
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [currentSlide, totalSlides, goToSlide]);
+
+  // -----------------------------------------------------------------------
   // Render
   // -----------------------------------------------------------------------
 
@@ -330,6 +391,9 @@ export function Deck({ children }: DeckProps) {
       <SlideNav
         current={currentSlide + 1}
         total={totalSlides}
+        onPrev={() => goToSlide(Math.max(currentSlide - 1, 0))}
+        onNext={() => goToSlide(Math.min(currentSlide + 1, totalSlides - 1))}
+        isMobile={isMobileViewport}
         hidden={CHROME_HIDDEN_TYPES.has(slideType ?? '')}
       />
     </div>

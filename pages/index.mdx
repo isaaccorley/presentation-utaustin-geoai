@@ -138,6 +138,24 @@ on GitHub — community-driven standards that actually ship.
 
 ---
 
+# The Data Already Exists
+
+- **2.6 billion buildings** — Overture Maps (up from 785M in 2023)
+- **119 million field boundaries** — fiboa / Fields of The World
+- **104 million places** — Foursquare Open Places (GeoParquet)
+- **Petabytes of climate data** — ERA5, CMIP6 in Zarr
+- **Trillions of LiDAR points** — USGS 3DEP as COPC
+- **Hundreds of millions of embeddings** — Clay, EarthIndex, Major TOM
+
+> All streamable from object storage. No servers needed.
+
+<SpeakerNotes>
+These numbers are from Chris Holmes' keynote. The ecosystem is already here —
+Overture went from 785M to 2.6B buildings in under two years.
+</SpeakerNotes>
+
+---
+
 <Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
 <div>
 
@@ -161,24 +179,6 @@ on GitHub — community-driven standards that actually ship.
 The key insight: a COG is just a regular TIFF file reorganized so that
 byte ranges map to spatial tiles. Any HTTP server that supports Range
 headers becomes a tile server for free.
-</SpeakerNotes>
-
----
-
-# The Data Already Exists
-
-- **2.6 billion buildings** — Overture Maps (up from 785M in 2023)
-- **119 million field boundaries** — fiboa / Fields of The World
-- **104 million places** — Foursquare Open Places (GeoParquet)
-- **Petabytes of climate data** — ERA5, CMIP6 in Zarr
-- **Trillions of LiDAR points** — USGS 3DEP as COPC
-- **Hundreds of millions of embeddings** — Clay, EarthIndex, Major TOM
-
-> All streamable from object storage. No servers needed.
-
-<SpeakerNotes>
-These numbers are from Chris Holmes' keynote. The ecosystem is already here —
-Overture went from 785M to 2.6B buildings in under two years.
 </SpeakerNotes>
 
 ---
@@ -454,9 +454,9 @@ At 1m you can see individual trees and rooftops.
 
 ---
 
-# Generalist Geospatial Foundation Models
+# Geospatial Foundation Models
 
-Like pretraining LLMs on all internet text, the goal is to build a generalist geospatial model that can process all modalities and then either produce embeddings or be fine-tuned downstream.
+Like pretraining LLMs on all internet text, the goal is to **build a generalist geospatial model that can process all modalities** and then either produce embeddings or be fine-tuned downstream.
 
 **RGB, MSI, SAR, HSI, climate, weather, and more.**
 
@@ -694,35 +694,6 @@ a model, and reassembled into a georeferenced output.
 
 ---
 
-<Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
-<div>
-
-## Embedding Retrieval
-
-- Encode satellite tiles into **binary vectors**
-- Nearest neighbor search via **Hamming distance**
-- Search billions of embeddings in milliseconds
-- Powers **isaac.earth/terrabit**
-
-</div>
-<div>
-
-<Video src="/videos/S04_EmbeddingRetrieval.webm" title="Embedding Retrieval" />
-
-</div>
-</Columns>
-
-<SpeakerNotes>
-Binary embedding retrieval: encode a satellite tile into a compact binary vector,
-then find nearest neighbors using Hamming distance.
-</SpeakerNotes>
-
----
-
-<Embed src="https://isaac.earth/terrabit" clip />
-
----
-
 # From Model to Product
 
 <Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
@@ -759,11 +730,69 @@ partitioning, and finally serving as COG + PMTiles from cloud storage.
 
 ---
 
+<Embed src="https://fieldsofthe.world/ftw-inference-app/dev/" title="FTW Inference App" clip />
+
+<SpeakerNotes>
+FieldsofThe.World inference app — a full-page web embed for the talk deck.
+</SpeakerNotes>
+
+---
+
+<Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
+<div>
+
+## Embedding Retrieval
+
+- Encode satellite tiles into **binary vectors**
+- Nearest neighbor search via **Hamming distance**
+- Search billions of embeddings in milliseconds
+- Powers **isaac.earth/terrabit**
+
+</div>
+<div>
+
+<Video src="/videos/S04_EmbeddingRetrieval.webm" title="Embedding Retrieval" />
+
+</div>
+</Columns>
+
+<SpeakerNotes>
+Binary embedding retrieval: encode a satellite tile into a compact binary vector,
+then find nearest neighbors using Hamming distance.
+</SpeakerNotes>
+
+---
+
+<Embed src="https://isaac.earth/terrabit" clip />
+
+---
+
 <SectionSlide backgroundImage="/images/landsat-brown-1.webp" kicker="Section 04">
 
 ## Building with AI Agents
 
 </SectionSlide>
+
+---
+
+# What I've Built with AI Coding Agents
+
+- **geospatialml.com** — blog with Caleb Robinson, built entirely with Claude
+- **isaac.earth/terrabit** — binary embedding retrieval, full frontend in ~2 days
+- **This presentation** — slides, Manim animations, deployment
+- **TorchGeo / SMP** — dataset wrappers, fixes, docs
+
+> Domain expertise + AI execution = force multiplier
+
+<SpeakerNotes>
+AI agents don't replace domain expertise, they amplify it. I still need to
+know what COGs are, how STAC works, what TorchGeo does. But I no longer
+hand-write every MapLibre callback or CSS grid layout.
+</SpeakerNotes>
+
+---
+
+<Embed src="https://geospatialml.com" clip />
 
 ---
 
@@ -798,35 +827,6 @@ The Model Context Protocol lets AI coding agents connect to external tools.
 This extension gives Claude direct access to the Planetary Computer STAC API —
 it can search, browse, and generate pipelines without leaving VS Code.
 </SpeakerNotes>
-
----
-
-<Embed src="https://fieldsofthe.world/ftw-inference-app/dev/" title="FTW Inference App" clip />
-
-<SpeakerNotes>
-FieldsofThe.World inference app — a full-page web embed for the talk deck.
-</SpeakerNotes>
-
----
-
-# What I've Built with AI Coding Agents
-
-- **geospatialml.com** — blog with Caleb Robinson, built entirely with Claude
-- **isaac.earth/terrabit** — binary embedding retrieval, full frontend in ~2 days
-- **This presentation** — slides, Manim animations, deployment
-- **TorchGeo / SMP** — dataset wrappers, fixes, docs
-
-> Domain expertise + AI execution = force multiplier
-
-<SpeakerNotes>
-AI agents don't replace domain expertise, they amplify it. I still need to
-know what COGs are, how STAC works, what TorchGeo does. But I no longer
-hand-write every MapLibre callback or CSS grid layout.
-</SpeakerNotes>
-
----
-
-<Embed src="https://geospatialml.com" clip />
 
 ---
 
