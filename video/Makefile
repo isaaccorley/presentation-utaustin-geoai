@@ -1,20 +1,28 @@
-# RSIM CVPR IMW 2026 Talk — Manim video pipeline
-QUALITY   ?= h
-SCENES    := S01_Title S02_PhysicsGap S03_Question S04_Pipeline S05_Tiled \
-             S06_Leaderboard S07_DINO S08_Protocol S09_Affine S10_Cross \
-             S11_Pareto S12_Recipe
+# GeoAI Talk — Manim video pipeline (2K 60fps, webm output)
+# Usage:
+#   make -f Makefile build SCENES="S01_CloudNativeStack S07_GeoParquetPushdown"
+#   make -f Makefile scene-S12_CloudNativeVsDownload
+VIDEO_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+MAKEFILE  := $(abspath $(lastword $(MAKEFILE_LIST)))
+SCRIPT    := $(VIDEO_DIR)/geoai_scenes.py
+THEME     := $(VIDEO_DIR)/_theme.py
+OUTDIR    := $(abspath $(VIDEO_DIR)/../public/videos)
+SCENES    ?= S01_CloudNativeStack S02_InferencePipeline S03_TorchGeoSampling S04_EmbeddingRetrieval \
+             S05_COGByteRange S06_STACSearchFanout S07_GeoParquetPushdown S08_ContrastiveLearning \
+             S09_MAEMaskedModeling S10_PixelVsPatchEmbedding S12_CloudNativeVsDownload \
+             S13_ProductionPipeline S14_CNGTimeline S16_Flywheel
 
 .PHONY: build clean
 
-build: final.mp4
+build: $(foreach s,$(SCENES),$(OUTDIR)/$(s).webm)
 
-# Render all scenes
-media/videos/script/1080p60/%.mp4: script.py
-	manim render -q$(QUALITY) script.py $*
+scene-%:
+	$(MAKE) -f $(MAKEFILE) $(OUTDIR)/$*.webm
 
-# Concatenate scenes into final video
-final.mp4: $(foreach s,$(SCENES),media/videos/script/1080p60/$(s).mp4) concat.txt
-	ffmpeg -y -f concat -safe 0 -i concat.txt -c copy $@
+# All scenes
+$(OUTDIR)/%.webm: $(SCRIPT) $(THEME)
+	@mkdir -p $(OUTDIR)
+	cd $(VIDEO_DIR) && uv run manim render -qh --format webm -o $(abspath $@) $(notdir $(SCRIPT)) $(notdir $(basename $@))
 
 clean:
-	rm -rf media __pycache__
+	rm -rf $(VIDEO_DIR)/media $(VIDEO_DIR)/__pycache__

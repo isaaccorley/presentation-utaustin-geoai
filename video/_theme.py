@@ -1,4 +1,7 @@
 """Shared visual theme and helpers for GeoAI talk Manim scenes."""
+
+from collections.abc import Callable
+
 import numpy as np
 from manim import (
     BOLD,
@@ -10,6 +13,7 @@ from manim import (
     FadeOut,
     Group,
     Line,
+    ManimColor,
     RoundedRectangle,
     Scene,
     Square,
@@ -20,18 +24,18 @@ from manim import (
 
 # ── Palette ──────────────────────────────────────────────────────────────
 
-BG      = "#F4F4EB"
-SURFACE = "#EAEADE"
-PANEL2  = "#DFDFD4"
-BORDER  = "#C8C2B2"
+BG = ManimColor("#F4F4EB")
+SURFACE = ManimColor("#EAEADE")
+PANEL2 = ManimColor("#DFDFD4")
+BORDER = ManimColor("#C8C2B2")
 
-MOON    = "#3B1E1C"
-DIM     = "#8F7F73"
+MOON = ManimColor("#3B1E1C")
+DIM = ManimColor("#8F7F73")
 
-EARTH   = "#1E5B46"
-CORAL   = "#BE3E1F"
-AMBER   = "#C96A1E"
-PERI    = "#4A6BA8"
+EARTH = ManimColor("#1E5B46")
+CORAL = ManimColor("#BE3E1F")
+AMBER = ManimColor("#C96A1E")
+PERI = ManimColor("#4A6BA8")
 
 # ── Typography ───────────────────────────────────────────────────────────
 
@@ -65,9 +69,13 @@ def caption(text, color=DIM, size=18):
 
 def panel(width, height, radius=0.22, fill=SURFACE, stroke=BORDER, stroke_width=1.2):
     return RoundedRectangle(
-        width=width, height=height, corner_radius=radius,
-        color=stroke, stroke_width=stroke_width,
-        fill_color=fill, fill_opacity=1.0,
+        width=width,
+        height=height,
+        corner_radius=radius,
+        color=stroke,
+        stroke_width=stroke_width,
+        fill_color=fill,
+        fill_opacity=1.0,
     )
 
 
@@ -101,8 +109,17 @@ class PacedScene(Scene):
             kwargs["run_time"] = kwargs["run_time"] * PACE
         super().play(*args, **kwargs)
 
-    def wait(self, duration=1.0, **kwargs):
-        super().wait(duration * PACE, **kwargs)
+    def wait(
+        self,
+        duration: float = 1.0,
+        stop_condition: Callable[[], bool] | None = None,
+        frozen_frame: bool | None = None,
+    ) -> None:
+        super().wait(
+            duration * PACE,
+            stop_condition=stop_condition,
+            frozen_frame=frozen_frame,
+        )
 
 
 def cleanup(scene, hold=1.0):
@@ -126,8 +143,18 @@ def mini_grid(rows, cols, cell, color, fill_color=None, fill_opacity=0.15):
 def satellite_tile(rows, cols, cell, seed=42):
     """Grid of patches colored to simulate satellite imagery (green/brown/gray)."""
     rng = np.random.RandomState(seed)
-    palette = ["#2D5F3A", "#4A7C59", "#6B8E5A", "#8B7355", "#A09070",
-               "#7A8B6F", "#5C7A4A", "#9E8C6C", "#667755", "#3E6B48"]
+    palette = [
+        "#2D5F3A",
+        "#4A7C59",
+        "#6B8E5A",
+        "#8B7355",
+        "#A09070",
+        "#7A8B6F",
+        "#5C7A4A",
+        "#9E8C6C",
+        "#667755",
+        "#3E6B48",
+    ]
     squares = VGroup()
     for r in range(rows):
         for c in range(cols):
@@ -148,6 +175,11 @@ def format_card(name, desc, icon_mob, accent, w=2.8, h=1.5):
         d.scale((w - 0.3) / d.width)
     n.move_to(card.get_top() + DOWN * 0.35)
     d.next_to(n, DOWN, buff=0.12)
-    icon_mob.scale_to_fit_width(min(0.7, w - 0.4))
+    # Keep the icon comfortably inside the card; width-only fitting was letting
+    # taller icons bleed past the bottom edge.
+    icon_mob.scale_to_fit_width(min(0.66, w - 0.5))
+    icon_mob.scale_to_fit_height(min(0.38, h - 0.95))
     icon_mob.next_to(d, DOWN, buff=0.15)
+    if icon_mob.get_bottom()[1] < card.get_bottom()[1] + 0.08:
+        icon_mob.shift(UP * (card.get_bottom()[1] + 0.08 - icon_mob.get_bottom()[1]))
     return VGroup(card, n, d, icon_mob)

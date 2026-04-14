@@ -11,14 +11,49 @@ export interface EmbedProps {
    * Default: false
    */
   clip?: boolean;
+  /** Render as an in-flow embed instead of a full-viewport takeover. */
+  inline?: boolean;
+  /** Height for inline embeds. */
+  height?: number;
 }
 
 /**
- * Full-viewport iframe embed component.
- * Use for live demos, maps, and interactive visualizations.
- * Uses position absolute to break out of the Slide padding.
+ * Full-viewport iframe embed component by default.
+ * Use `inline` for sized embeds that live inside a column.
  */
-export function Embed({ src, title = 'Embedded content', clip = false }: EmbedProps) {
+export function Embed({
+  src,
+  title = 'Embedded content',
+  clip = false,
+  inline = false,
+  height = 440,
+}: EmbedProps) {
+  if (inline) {
+    return (
+      <div
+        sx={{
+          width: '100%',
+          height,
+          overflow: 'hidden',
+          borderRadius: 8,
+          border: '1px solid rgba(244,244,235,0.1)',
+        }}
+      >
+        <iframe
+          src={src}
+          title={title}
+          sx={{
+            width: '100%',
+            height: '100%',
+            border: 'none',
+          }}
+          sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+          loading="lazy"
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       sx={{

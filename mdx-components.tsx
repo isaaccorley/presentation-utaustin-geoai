@@ -9,11 +9,9 @@ import { Embed } from './components/Embed';
 import { Img } from './components/Img';
 import { Logo } from './components/Logo';
 import { MapLibreEmbed } from './components/MapLibreEmbed';
-import { PMTilesEmbed } from './components/PMTilesEmbed';
 import { QRGrid } from './components/QRGrid';
 import { SectionSlide } from './components/SectionSlide';
 import { SpeakerNotes } from './components/SpeakerNotes';
-import { TerminalReplay } from './components/TerminalReplay';
 import { TitleSlide } from './components/TitleSlide';
 import { Video } from './components/Video';
 import { ZarrTemperatureMap } from './components/ZarrTemperatureMap';
@@ -299,9 +297,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     Img,
     Video,
     MapLibreEmbed,
-    PMTilesEmbed,
     QRGrid,
-    TerminalReplay,
     ZarrTemperatureMap,
   };
 }

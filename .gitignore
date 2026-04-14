@@ -6,12 +6,15 @@
 # next.js
 /.next/
 /out/
+package-lock.json
 
 # production
 /build
 
 # misc
 .DS_Store
+__pycache__/
+*.pyc
 *.pem
 
 # debug

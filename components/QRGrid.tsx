@@ -8,9 +8,11 @@ export interface QRGridItem {
 
 export interface QRGridProps {
   items: QRGridItem[];
+  layout?: 'auto' | 'row';
+  size?: number;
 }
 
-function QRCard({ item }: { item: QRGridItem }) {
+function QRCard({ item, size }: { item: QRGridItem; size: number }) {
   return (
     <div
       sx={{
@@ -27,7 +29,7 @@ function QRCard({ item }: { item: QRGridItem }) {
           borderRadius: 8,
         }}
       >
-        <QRCodeSVG value={item.url} size={200} fgColor="#3b1e1c" bgColor="#ffffff" level="M" />
+        <QRCodeSVG value={item.url} size={size} fgColor="#3b1e1c" bgColor="#ffffff" level="M" />
       </div>
       <span
         sx={{
@@ -44,7 +46,27 @@ function QRCard({ item }: { item: QRGridItem }) {
   );
 }
 
-export function QRGrid({ items }: QRGridProps) {
+export function QRGrid({ items, layout = 'auto', size = 200 }: QRGridProps) {
+  if (layout === 'row') {
+    return (
+      <div
+        sx={{
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'flex-start',
+          justifyContent: 'center',
+          gap: 5,
+          py: 4,
+          flexWrap: 'nowrap',
+        }}
+      >
+        {items.map((item) => (
+          <QRCard key={item.url} item={item} size={size} />
+        ))}
+      </div>
+    );
+  }
+
   // Split into rows: first 2, then remaining
   const topRow = items.slice(0, 2);
   const bottomRow = items.slice(2);
@@ -68,7 +90,7 @@ export function QRGrid({ items }: QRGridProps) {
         }}
       >
         {topRow.map((item) => (
-          <QRCard key={item.url} item={item} />
+          <QRCard key={item.url} item={item} size={size} />
         ))}
       </div>
       {/* Bottom row: 3 items */}
@@ -81,7 +103,7 @@ export function QRGrid({ items }: QRGridProps) {
           }}
         >
           {bottomRow.map((item) => (
-            <QRCard key={item.url} item={item} />
+            <QRCard key={item.url} item={item} size={size} />
           ))}
         </div>
       )}

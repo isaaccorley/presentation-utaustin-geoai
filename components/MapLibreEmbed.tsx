@@ -6,6 +6,8 @@
  * Hover popup with building details. Flies to UT Austin campus on load.
  */
 
+import type { DataDrivenPropertyValueSpecification } from '@maplibre/maplibre-gl-style-spec';
+import type { MapGeoJSONFeature, MapLayerMouseEvent, Map as MapLibreMap, Popup } from 'maplibre-gl';
 import { useEffect, useRef } from 'react';
 
 const OVERTURE_BASE = 'https://overturemaps-tiles-us-west-2-beta.s3.amazonaws.com/2026-01-21';
@@ -35,14 +37,14 @@ let protocolRegistered = false;
 
 export function MapLibreEmbed() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<any>(null);
-  const popupRef = useRef<any>(null);
+  const mapRef = useRef<MapLibreMap | null>(null);
+  const popupRef = useRef<Popup | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!containerRef.current) return;
 
-    let map: any;
+    let map: MapLibreMap | null = null;
     let cancelled = false;
     let observer: ResizeObserver | null = null;
 
@@ -52,10 +54,7 @@ export function MapLibreEmbed() {
       if (rect.width === 0 || rect.height === 0) return;
 
       (async () => {
-        const [maplibregl, pmtiles] = await Promise.all([
-          import('maplibre-gl'),
-          import('pmtiles'),
-        ]);
+        const [maplibregl, pmtiles] = await Promise.all([import('maplibre-gl'), import('pmtiles')]);
 
         if (cancelled || !containerRef.current) return;
 
@@ -66,11 +65,11 @@ export function MapLibreEmbed() {
         }
 
         // Build match expression for subtype colors
-        const colorMatch = ['match', ['get', 'subtype']] as any;
+        const colorMatch = ['match', ['get', 'subtype']] as Array<string | number | string[]>;
         for (const [subtype, color] of SUBTYPE_COLORS) {
           colorMatch.push(subtype, color);
         }
-        colorMatch.push('#80a0d8'); // fallback
+        colorMatch.push('#80a0d8');
 
         map = new maplibregl.default.Map({
           container: containerRef.current,
@@ -154,8 +153,18 @@ export function MapLibreEmbed() {
                 source: 'buildings',
                 'source-layer': 'building',
                 paint: {
-                  'fill-color': colorMatch,
-                  'fill-opacity': ['interpolate', ['linear'], ['zoom'], 10, 0.15, 14, 0.35, 17, 0.55],
+                  'fill-color': colorMatch as DataDrivenPropertyValueSpecification<string>,
+                  'fill-opacity': [
+                    'interpolate',
+                    ['linear'],
+                    ['zoom'],
+                    10,
+                    0.15,
+                    14,
+                    0.35,
+                    17,
+                    0.55,
+                  ],
                 },
               },
               // Buildings — outline
@@ -201,17 +210,27 @@ export function MapLibreEmbed() {
           offset: 12,
         });
         popupRef.current = popup;
+        const mapInstance = map;
+        if (!mapInstance) return;
 
         // Hover interaction
-        map.on('mousemove', 'buildings-fill', (e: any) => {
-          if (!e.features || e.features.length === 0) return;
-          map.getCanvas().style.cursor = 'pointer';
+        mapInstance.on('mousemove', 'buildings-fill', (e: MapLayerMouseEvent) => {
+          const feature = e.features?.[0] as MapGeoJSONFeature | undefined;
+          if (!feature) return;
+          mapInstance.getCanvas().style.cursor = 'pointer';
 
-          const f = e.features[0];
-          const p = f.properties;
+          const p = feature.properties as {
+            '@name'?: string;
+            class?: string;
+            subtype?: string;
+            height?: string | number;
+            num_floors?: string | number;
+            roof_shape?: string;
+            facade_material?: string;
+          };
 
           // Highlight building
-          map.setFilter('buildings-highlight', ['==', 'id', f.properties.id || '']);
+          mapInstance.setFilter('buildings-highlight', ['==', 'id', feature.id ?? '']);
 
           // Build popup HTML
           const name = p['@name'] || p.class || 'Building';
@@ -230,17 +249,17 @@ export function MapLibreEmbed() {
             </div>
           `;
 
-          popup.setLngLat(e.lngLat).setHTML(html).addTo(map);
+          popup.setLngLat(e.lngLat).setHTML(html).addTo(mapInstance);
         });
 
-        map.on('mouseleave', 'buildings-fill', () => {
-          map.getCanvas().style.cursor = '';
-          map.setFilter('buildings-highlight', ['==', 'id', '']);
+        mapInstance.on('mouseleave', 'buildings-fill', () => {
+          mapInstance.getCanvas().style.cursor = '';
+          mapInstance.setFilter('buildings-highlight', ['==', 'id', '']);
           popup.remove();
         });
 
-        map.on('load', () => {
-          map.flyTo({
+        mapInstance.on('load', () => {
+          mapInstance.flyTo({
             center: [UT_AUSTIN.lng, UT_AUSTIN.lat],
             zoom: 15,
             duration: 4000,

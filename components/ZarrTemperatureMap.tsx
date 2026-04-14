@@ -1,169 +1,221 @@
 /** @jsxImportSource theme-ui */
 
 /**
- * ERA5 climate variable visualization over Austin, TX.
- * MapLibre with ESRI satellite basemap + Carto labels + heatmap overlay.
- * Supports switching variables and scrubbing time via slider.
+ * HRRR streaming visualization over Austin, TX.
+ * Streams 24 hourly analysis chunks from hrrrzarr (S3) via zarrita.
+ * Variables: 2m temp, 2m RH, 10m wind, surface precip rate.
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import type { Map as MapLibreMap } from 'maplibre-gl';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FetchStore, get, open, root, slice } from 'zarrita';
 
 const AUSTIN = { lng: -97.74, lat: 30.27 };
-const GRID_SIZE = 64;
-const GRID_EXTENT = 1.2;
 
-// 24 hourly timesteps
-const HOURS = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00 UTC`);
+// HRRR Lambert Conformal grid window around Austin (80x80 ≈ 240km square)
+const Y0 = 183;
+const Y1 = 263;
+const X0 = 851;
+const X1 = 931;
+const WIN_H = Y1 - Y0;
+const WIN_W = X1 - X0;
+
+// Four corners of window, reprojected to lat/lon. Order: TL, TR, BR, BL.
+const CORNERS: [[number, number], [number, number], [number, number], [number, number]] = [
+  [-99.0105, 31.3287],
+  [-96.5028, 31.3347],
+  [-96.5292, 29.1981],
+  [-98.9704, 29.1923],
+];
+
+const DATE = '20260412';
+const HRRR_BASE = `https://hrrrzarr.s3.amazonaws.com/sfc/${DATE}`;
+
+type VarKey = 'tmp' | 'rh' | 'wind';
 
 interface VarConfig {
   label: string;
   unit: string;
-  generate: (hour: number) => number[][];
-  colormap: (f: number) => [number, number, number, number];
   range: [number, number];
-}
-
-function genTemperature(hour: number): number[][] {
-  // Diurnal cycle: coolest at 06, warmest at 15
-  const diurnal = -3 * Math.cos(((hour - 15) / 24) * 2 * Math.PI);
-  const grid: number[][] = [];
-  for (let r = 0; r < GRID_SIZE; r++) {
-    const row: number[] = [];
-    for (let c = 0; c < GRID_SIZE; c++) {
-      const cx = (c - GRID_SIZE / 2) / GRID_SIZE;
-      const cy = (r - GRID_SIZE / 2) / GRID_SIZE;
-      const dist = Math.sqrt(cx * cx + cy * cy);
-      // Urban heat island effect in center
-      const uhi = Math.exp(-dist * dist / 0.08) * 2;
-      const base = 300 + diurnal + uhi - dist * 14 + cx * 4;
-      const noise = Math.sin(c * 1.7 + r * 0.9 + hour * 0.3) * 1.0;
-      row.push(base + noise);
-    }
-    grid.push(row);
-  }
-  return grid;
-}
-
-function genWind(hour: number): number[][] {
-  const timeShift = hour * 0.4;
-  const grid: number[][] = [];
-  for (let r = 0; r < GRID_SIZE; r++) {
-    const row: number[] = [];
-    for (let c = 0; c < GRID_SIZE; c++) {
-      const cx = (c - GRID_SIZE / 2) / GRID_SIZE;
-      const cy = (r - GRID_SIZE / 2) / GRID_SIZE;
-      const base = 4 + Math.sin(cx * 3.5 + cy * 1.2 + timeShift) * 2.5 + Math.cos(cy * 4 + timeShift * 0.7) * 1.5;
-      const noise = Math.sin(c * 0.8 + r * 1.3 + hour * 0.2) * 0.6;
-      row.push(Math.max(0, base + noise));
-    }
-    grid.push(row);
-  }
-  return grid;
-}
-
-function genPrecipitation(hour: number): number[][] {
-  // Storm cell moves across area over time
-  const stormX = -0.3 + (hour / 24) * 0.8;
-  const stormY = 0.2 - (hour / 24) * 0.3;
-  const grid: number[][] = [];
-  for (let r = 0; r < GRID_SIZE; r++) {
-    const row: number[] = [];
-    for (let c = 0; c < GRID_SIZE; c++) {
-      const cx = (c - GRID_SIZE / 2) / GRID_SIZE;
-      const cy = (r - GRID_SIZE / 2) / GRID_SIZE;
-      const cell1 = Math.exp(-((cx - stormX) ** 2 + (cy - stormY) ** 2) / 0.04) * 14;
-      const cell2 = Math.exp(-((cx + 0.1) ** 2 + (cy + 0.25 - hour * 0.01) ** 2) / 0.06) * 6;
-      const noise = Math.sin(c * 2.1 + r * 1.4 + hour * 0.5) * 0.5;
-      row.push(Math.max(0, cell1 + cell2 + noise));
-    }
-    grid.push(row);
-  }
-  return grid;
+  colormap: (f: number) => [number, number, number, number];
+  fetch: (hour: number) => Promise<Float32Array>;
+  transform: (v: number) => number;
 }
 
 function cmapTemp(f: number): [number, number, number, number] {
   const r = Math.round(30 + f * 225);
   const g = Math.round(60 + (1 - Math.abs(f - 0.5) * 2) * 140);
   const b = Math.round(210 - f * 190);
-  return [r, g, b, 170];
+  return [r, g, b, 200];
+}
+
+function cmapRH(f: number): [number, number, number, number] {
+  // Dry (brown) → moist (teal/blue)
+  const r = Math.round(200 - f * 160);
+  const g = Math.round(160 + f * 30);
+  const b = Math.round(120 + f * 110);
+  return [r, g, b, 200];
 }
 
 function cmapWind(f: number): [number, number, number, number] {
-  const r = Math.round(240 - f * 200);
-  const g = Math.round(245 - f * 120);
-  const b = Math.round(250 - f * 40);
-  return [r, g, b, Math.round(50 + f * 150)];
+  // Bright cyan (calm) → saturated royal blue (windy): high contrast, colorblind-safe.
+  const r = Math.round(140 - f * 110);
+  const g = Math.round(220 - f * 140);
+  const b = Math.round(245 - f * 55);
+  return [r, g, b, Math.round(150 + f * 100)];
 }
 
-function cmapPrecip(f: number): [number, number, number, number] {
-  if (f < 0.03) return [0, 0, 0, 0];
-  const r = Math.round(f > 0.6 ? (f - 0.6) * 400 : 0);
-  const g = Math.round(f < 0.5 ? f * 400 : (1 - f) * 300);
-  const b = Math.round(50 + f * 200);
-  return [r, g, b, Math.round(40 + f * 180)];
+async function fetchHRRRArray(hour: number, path: string): Promise<Float32Array> {
+  const hh = String(hour).padStart(2, '0');
+  const url = `${HRRR_BASE}/${DATE}_${hh}z_anl.zarr`;
+  const store = new FetchStore(url);
+  const arr = await open(root(store).resolve(path), { kind: 'array' });
+  const result = await get(arr, [slice(Y0, Y1), slice(X0, X1)]);
+  return result.data as Float32Array;
 }
 
-const VARIABLES: Record<string, VarConfig> = {
-  t2m: { label: '2m Temperature', unit: 'K', generate: genTemperature, colormap: cmapTemp, range: [286, 308] },
-  u10: { label: '10m Wind Speed', unit: 'm/s', generate: genWind, colormap: cmapWind, range: [0, 12] },
-  tp: { label: 'Total Precipitation', unit: 'mm', generate: genPrecipitation, colormap: cmapPrecip, range: [0, 14] },
+async function fetchWindSpeed(hour: number): Promise<Float32Array> {
+  const [u, v] = await Promise.all([
+    fetchHRRRArray(hour, '10m_above_ground/UGRD/10m_above_ground/UGRD'),
+    fetchHRRRArray(hour, '10m_above_ground/VGRD/10m_above_ground/VGRD'),
+  ]);
+  const out = new Float32Array(u.length);
+  for (let i = 0; i < u.length; i++) {
+    out[i] = Math.sqrt(u[i] * u[i] + v[i] * v[i]);
+  }
+  return out;
+}
+
+const VARIABLES: Record<VarKey, VarConfig> = {
+  tmp: {
+    label: '2m Temperature',
+    unit: '°F',
+    range: [50, 95],
+    colormap: cmapTemp,
+    fetch: (h) => fetchHRRRArray(h, '2m_above_ground/TMP/2m_above_ground/TMP'),
+    transform: (k) => (k - 273.15) * 1.8 + 32,
+  },
+  rh: {
+    label: '2m Humidity',
+    unit: '%',
+    range: [50, 100],
+    colormap: cmapRH,
+    fetch: (h) => fetchHRRRArray(h, '2m_above_ground/RH/2m_above_ground/RH'),
+    transform: (v) => v,
+  },
+  wind: {
+    label: '10m Wind',
+    unit: 'm/s',
+    range: [0, 15],
+    colormap: cmapWind,
+    fetch: fetchWindSpeed,
+    transform: (v) => v,
+  },
 };
 
-function renderHeatmapImage(varKey: string, hour: number): string {
-  const cfg = VARIABLES[varKey];
+// Austin pixel within 80x80 window: (73, 141) computed via pyproj.
+const AUSTIN_Y = 73;
+const AUSTIN_X = 141;
+
+function renderHeatmap(grid: Float32Array | null, cfg: VarConfig): string {
   const canvas = document.createElement('canvas');
-  canvas.width = GRID_SIZE;
-  canvas.height = GRID_SIZE;
-  const ctx = canvas.getContext('2d')!;
-  const imgData = ctx.createImageData(GRID_SIZE, GRID_SIZE);
-  const grid = cfg.generate(hour);
+  canvas.width = WIN_W;
+  canvas.height = WIN_H;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('no 2d ctx');
+  const img = ctx.createImageData(WIN_W, WIN_H);
   const [lo, hi] = cfg.range;
-  for (let r = 0; r < GRID_SIZE; r++) {
-    for (let c = 0; c < GRID_SIZE; c++) {
-      const f = Math.max(0, Math.min(1, (grid[r][c] - lo) / (hi - lo)));
-      const [red, green, blue, alpha] = cfg.colormap(f);
-      const idx = (r * GRID_SIZE + c) * 4;
-      imgData.data[idx] = red;
-      imgData.data[idx + 1] = green;
-      imgData.data[idx + 2] = blue;
-      imgData.data[idx + 3] = alpha;
+  if (grid) {
+    // HRRR y axis is bottom-up; canvas is top-down → flip vertically.
+    for (let r = 0; r < WIN_H; r++) {
+      const srcRow = WIN_H - 1 - r;
+      for (let c = 0; c < WIN_W; c++) {
+        const raw = grid[srcRow * WIN_W + c];
+        const v = cfg.transform(raw);
+        const f = Math.max(0, Math.min(1, (v - lo) / (hi - lo)));
+        const [R, G, B, A] = cfg.colormap(f);
+        const i = (r * WIN_W + c) * 4;
+        img.data[i] = R;
+        img.data[i + 1] = G;
+        img.data[i + 2] = B;
+        img.data[i + 3] = A;
+      }
     }
   }
-  ctx.putImageData(imgData, 0, 0);
+  ctx.putImageData(img, 0, 0);
   return canvas.toDataURL();
 }
 
 export function ZarrTemperatureMap() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<any>(null);
-  const [activeVar, setActiveVar] = useState('t2m');
-  const [hour, setHour] = useState(12);
+  const mapRef = useRef<MapLibreMap | null>(null);
+  const [activeVar, setActiveVar] = useState<VarKey>('tmp');
+  const [hour, setHour] = useState(0);
   const [ready, setReady] = useState(false);
   const [playing, setPlaying] = useState(true);
   const playRef = useRef(false);
+  const [cache, setCache] = useState<Map<string, Float32Array>>(() => new Map());
+  const cacheRef = useRef(cache);
+  cacheRef.current = cache;
 
-  const updateOverlay = useCallback((varKey: string, h: number) => {
-    const map = mapRef.current;
-    if (!map) return;
-    const source = map.getSource('heatmap');
-    if (!source) return;
-    const dataUrl = renderHeatmapImage(varKey, h);
-    source.updateImage({
-      url: dataUrl,
-      coordinates: [
-        [AUSTIN.lng - GRID_EXTENT, AUSTIN.lat + GRID_EXTENT],
-        [AUSTIN.lng + GRID_EXTENT, AUSTIN.lat + GRID_EXTENT],
-        [AUSTIN.lng + GRID_EXTENT, AUSTIN.lat - GRID_EXTENT],
-        [AUSTIN.lng - GRID_EXTENT, AUSTIN.lat - GRID_EXTENT],
-      ],
-    });
-  }, []);
+  const cfg = VARIABLES[activeVar];
+
+  // Background stream 24 hours for the active variable (skip already cached).
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      for (let h = 0; h < 24; h++) {
+        if (cancelled) return;
+        const key = `${activeVar}-${h}`;
+        if (cacheRef.current.has(key)) continue;
+        try {
+          const data = await VARIABLES[activeVar].fetch(h);
+          if (cancelled) return;
+          setCache((prev) => {
+            const next = new Map(prev);
+            next.set(key, data);
+            return next;
+          });
+        } catch (e) {
+          console.error(`HRRR ${activeVar} hour ${h} failed:`, e);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeVar]);
+
+  const loadedCount = useMemo(() => {
+    let n = 0;
+    for (let h = 0; h < 24; h++) if (cache.has(`${activeVar}-${h}`)) n++;
+    return n;
+  }, [cache, activeVar]);
+
+  const updateOverlay = useCallback(
+    (varKey: VarKey, h: number) => {
+      const map = mapRef.current;
+      if (!map) return;
+      const source = map.getSource('heatmap') as
+        | {
+            updateImage: (options: {
+              url: string;
+              coordinates: [[number, number], [number, number], [number, number], [number, number]];
+            }) => void;
+          }
+        | undefined;
+      if (!source) return;
+      const grid = cache.get(`${varKey}-${h}`) ?? null;
+      source.updateImage({ url: renderHeatmap(grid, VARIABLES[varKey]), coordinates: CORNERS });
+    },
+    [cache],
+  );
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!containerRef.current) return;
 
-    let map: any;
+    let map: MapLibreMap | null = null;
     let cancelled = false;
     let observer: ResizeObserver | null = null;
 
@@ -176,8 +228,6 @@ export function ZarrTemperatureMap() {
         const maplibregl = await import('maplibre-gl');
         if (cancelled || !containerRef.current) return;
 
-        const initialImage = renderHeatmapImage('t2m', 12);
-
         map = new maplibregl.default.Map({
           container: containerRef.current,
           style: {
@@ -186,7 +236,9 @@ export function ZarrTemperatureMap() {
             sources: {
               satellite: {
                 type: 'raster',
-                tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+                tiles: [
+                  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                ],
                 tileSize: 256,
                 maxzoom: 18,
               },
@@ -200,25 +252,30 @@ export function ZarrTemperatureMap() {
               },
               heatmap: {
                 type: 'image',
-                url: initialImage,
-                coordinates: [
-                  [AUSTIN.lng - GRID_EXTENT, AUSTIN.lat + GRID_EXTENT],
-                  [AUSTIN.lng + GRID_EXTENT, AUSTIN.lat + GRID_EXTENT],
-                  [AUSTIN.lng + GRID_EXTENT, AUSTIN.lat - GRID_EXTENT],
-                  [AUSTIN.lng - GRID_EXTENT, AUSTIN.lat - GRID_EXTENT],
-                ],
+                url: renderHeatmap(null, VARIABLES.tmp),
+                coordinates: CORNERS,
               },
             },
             layers: [
               { id: 'satellite', type: 'raster', source: 'satellite' },
-              { id: 'heatmap', type: 'raster', source: 'heatmap', paint: { 'raster-opacity': 0.7, 'raster-fade-duration': 0 } },
-              { id: 'labels', type: 'raster', source: 'carto-labels', paint: { 'raster-opacity': 0.9 } },
+              {
+                id: 'heatmap',
+                type: 'raster',
+                source: 'heatmap',
+                paint: { 'raster-opacity': 0.7, 'raster-fade-duration': 0 },
+              },
+              {
+                id: 'labels',
+                type: 'raster',
+                source: 'carto-labels',
+                paint: { 'raster-opacity': 0.9 },
+              },
             ],
           },
           center: [AUSTIN.lng, AUSTIN.lat],
-          zoom: 8,
-          maxZoom: 12,
-          minZoom: 6,
+          zoom: 7.2,
+          maxZoom: 11,
+          minZoom: 5,
           attributionControl: false,
         });
 
@@ -241,16 +298,17 @@ export function ZarrTemperatureMap() {
     return () => {
       cancelled = true;
       observer?.disconnect();
-      if (map) { map.remove(); mapRef.current = null; }
+      if (map) {
+        map.remove();
+        mapRef.current = null;
+      }
     };
   }, []);
 
-  // Update overlay on var/hour change
   useEffect(() => {
     if (ready) updateOverlay(activeVar, hour);
   }, [activeVar, hour, ready, updateOverlay]);
 
-  // Play animation
   useEffect(() => {
     playRef.current = playing;
     if (!playing) return;
@@ -258,17 +316,27 @@ export function ZarrTemperatureMap() {
     let lastTime = 0;
     const animate = (time: number) => {
       if (!playRef.current) return;
-      if (time - lastTime > 1000) {
-        setHour(h => (h + 1) % 24);
+      if (time - lastTime > 800) {
+        setHour((h) => {
+          const next = (h + 1) % 24;
+          return cache.has(`${activeVar}-${next}`) ? next : h;
+        });
         lastTime = time;
       }
       frame = requestAnimationFrame(animate);
     };
     frame = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(frame);
-  }, [playing]);
+  }, [playing, cache, activeVar]);
 
-  const cfg = VARIABLES[activeVar];
+  const currentHourStr = `${String(hour).padStart(2, '0')}:00 UTC`;
+  const hourCached = cache.has(`${activeVar}-${hour}`);
+  const prettyDate = `${DATE.slice(0, 4)}-${DATE.slice(4, 6)}-${DATE.slice(6, 8)}`;
+  const austinVal = (() => {
+    const g = cache.get(`${activeVar}-${hour}`);
+    if (!g) return null;
+    return cfg.transform(g[AUSTIN_Y * WIN_W + AUSTIN_X]);
+  })();
 
   return (
     <div
@@ -301,9 +369,18 @@ export function ZarrTemperatureMap() {
           lineHeight: 1.5,
         }}
       >
-        <div sx={{ fontWeight: 600, fontSize: '13px' }}>ERA5 · {cfg.label}</div>
+        <div sx={{ fontWeight: 600, fontSize: '13px' }}>HRRR · {cfg.label}</div>
         <div sx={{ opacity: 0.6, fontSize: '11px' }}>
-          {cfg.range[0]}–{cfg.range[1]} {cfg.unit} · 0.25° · {HOURS[hour]}
+          3km · {prettyDate} · {currentHourStr}
+          {austinVal !== null && (
+            <div sx={{ fontSize: '10px', marginTop: 4 }}>
+              Austin: {austinVal.toFixed(1)}
+              {cfg.unit}
+            </div>
+          )}
+          <div sx={{ fontSize: '10px', marginTop: 4, opacity: 0.7 }}>
+            hrrrzarr · zarrita · {loadedCount}/24 hrs streamed
+          </div>
         </div>
       </div>
 
@@ -326,7 +403,8 @@ export function ZarrTemperatureMap() {
         }}
       >
         <span sx={{ fontFamily: 'monospace', fontSize: '10px', color: '#f4f4eb', opacity: 0.7 }}>
-          {cfg.range[1]} {cfg.unit}
+          {cfg.range[1]}
+          {cfg.unit}
         </span>
         <div
           sx={{
@@ -337,12 +415,12 @@ export function ZarrTemperatureMap() {
             border: '1px solid rgba(244,244,235,0.15)',
           }}
         >
-          {Array.from({ length: 40 }, (_, i) => {
-            const f = 1 - i / 39;
+          {Array.from({ length: 40 }).map((_, idx) => {
+            const f = 1 - idx / 39;
             const [r, g, b, a] = cfg.colormap(f);
             return (
               <div
-                key={i}
+                key={`color-stop-${Math.round(f * 1000)}`}
                 sx={{
                   width: '100%',
                   height: '2.5%',
@@ -353,7 +431,8 @@ export function ZarrTemperatureMap() {
           })}
         </div>
         <span sx={{ fontFamily: 'monospace', fontSize: '10px', color: '#f4f4eb', opacity: 0.7 }}>
-          {cfg.range[0]} {cfg.unit}
+          {cfg.range[0]}
+          {cfg.unit}
         </span>
       </div>
 
@@ -384,7 +463,8 @@ export function ZarrTemperatureMap() {
           }}
         >
           <button
-            onClick={() => setPlaying(p => !p)}
+            type="button"
+            onClick={() => setPlaying((p) => !p)}
             sx={{
               border: 'none',
               bg: 'transparent',
@@ -403,7 +483,10 @@ export function ZarrTemperatureMap() {
             min={0}
             max={23}
             value={hour}
-            onChange={e => { setPlaying(false); setHour(Number(e.target.value)); }}
+            onChange={(e) => {
+              setPlaying(false);
+              setHour(Number(e.target.value));
+            }}
             sx={{
               flex: 1,
               height: '4px',
@@ -417,7 +500,7 @@ export function ZarrTemperatureMap() {
                 width: 14,
                 height: 14,
                 borderRadius: '50%',
-                bg: '#80a0d8',
+                bg: hourCached ? '#80a0d8' : '#555',
                 cursor: 'pointer',
               },
             }}
@@ -428,12 +511,13 @@ export function ZarrTemperatureMap() {
               fontSize: '11px',
               color: '#f4f4eb',
               opacity: 0.7,
-              minWidth: '60px',
+              minWidth: '90px',
               textAlign: 'right',
               flexShrink: 0,
             }}
           >
-            {HOURS[hour]}
+            {currentHourStr}
+            {!hourCached && ' …'}
           </span>
         </div>
 
@@ -449,9 +533,10 @@ export function ZarrTemperatureMap() {
             justifyContent: 'center',
           }}
         >
-          {Object.entries(VARIABLES).map(([key, v]) => (
+          {(Object.entries(VARIABLES) as [VarKey, VarConfig][]).map(([key, v]) => (
             <button
               key={key}
+              type="button"
               onClick={() => setActiveVar(key)}
               sx={{
                 border: 'none',
@@ -465,7 +550,9 @@ export function ZarrTemperatureMap() {
                 transition: 'all 0.15s',
                 bg: activeVar === key ? 'rgba(128, 160, 216, 0.3)' : 'transparent',
                 color: activeVar === key ? '#f4f4eb' : 'rgba(244, 244, 235, 0.5)',
-                '&:hover': { bg: activeVar === key ? 'rgba(128, 160, 216, 0.3)' : 'rgba(255,255,255,0.08)' },
+                '&:hover': {
+                  bg: activeVar === key ? 'rgba(128, 160, 216, 0.3)' : 'rgba(255,255,255,0.08)',
+                },
               }}
             >
               {v.label}

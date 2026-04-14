@@ -1,10 +1,10 @@
 export const meta = {
-  title: 'GeoAI & Cloud-Native Geospatial',
+  title: 'Cloud-Native GeoAI',
 }
 
 <TitleSlide
-  title="GeoAI & Cloud-Native Geospatial"
-  subtitle="Building Tools with AI Coding Agents"
+  title="Cloud-Native GeoAI"
+  subtitle="Best Practices for Building Geospatial AI Tools and Products"
   author="Isaac Corley — Taylor Geospatial"
   date="UT Austin · April 2026"
 />
@@ -15,7 +15,7 @@ export const meta = {
 <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
 
 <Img
-  src="/images/headshot.jpg"
+  src="/images/headshot.webp"
   alt="Isaac Corley"
   style={{ width: 280, height: 320, borderRadius: 8, objectFit: 'cover', objectPosition: 'center top' }}
 />
@@ -45,7 +45,7 @@ export const meta = {
 
 ---
 
-<SectionSlide backgroundImage="/images/landsat-brown-1.jpg" kicker="Section 01">
+<SectionSlide backgroundImage="/images/landsat-brown-1.webp" kicker="Section 01">
 
 ## Cloud-Native Geospatial
 
@@ -67,7 +67,7 @@ export const meta = {
 </div>
 <div>
 
-<Video src="/videos/S12_CloudNativeVsDownload.mp4" title="Download Everything vs Stream What You Need" />
+<Video src="/videos/S12_CloudNativeVsDownload.webm" title="Download Everything vs Stream What You Need" />
 
 </div>
 </Columns>
@@ -96,7 +96,7 @@ All built on HTTP range requests + object storage.
 </div>
 <div>
 
-<Video src="/videos/S01_CloudNativeStack.mp4" title="Cloud-Native Geospatial Stack" />
+<Video src="/videos/S01_CloudNativeStack.webm" title="Cloud-Native Geospatial Stack" />
 
 </div>
 </Columns>
@@ -125,7 +125,7 @@ Every format was developed in the open on GitHub — community-driven standards 
 </div>
 <div>
 
-<Video src="/videos/S14_CNGTimeline.mp4" title="Cloud-Native Geospatial Timeline: 2015–2025" />
+<Video src="/videos/S14_CNGTimeline.webm" title="Cloud-Native Geospatial Timeline: 2015–2025" />
 
 </div>
 </Columns>
@@ -152,7 +152,7 @@ on GitHub — community-driven standards that actually ship.
 </div>
 <div>
 
-<Video src="/videos/S05_COGByteRange.mp4" title="COG Byte Range Requests" />
+<Video src="/videos/S05_COGByteRange.webm" title="COG Byte Range Requests" />
 
 </div>
 </Columns>
@@ -196,7 +196,7 @@ Overture went from 785M to 2.6B buildings in under two years.
 </div>
 <div>
 
-<Video src="/videos/S07_GeoParquetPushdown.mp4" title="GeoParquet Predicate Pushdown" />
+<Video src="/videos/S07_GeoParquetPushdown.webm" title="GeoParquet Predicate Pushdown" />
 
 </div>
 </Columns>
@@ -222,7 +222,7 @@ that don't overlap your AOI — predicate pushdown.
 </div>
 <div>
 
-<Video src="/videos/S06_STACSearchFanout.mp4" title="STAC Search Fan-out" />
+<Video src="/videos/S06_STACSearchFanout.webm" title="STAC Search Fan-out" />
 
 </div>
 </Columns>
@@ -371,7 +371,7 @@ Streaming COGs directly from Azure blob storage.
 <div>
 
 <Img
-  src="/images/utaustin-rgb.png"
+  src="/images/utaustin-rgb.webp"
   alt="True color RGB of UT Austin from Sentinel-2"
   style={{ width: '100%', maxHeight: '60vh', objectFit: 'contain', borderRadius: 6 }}
 />
@@ -382,7 +382,7 @@ Streaming COGs directly from Azure blob storage.
 <div>
 
 <Img
-  src="/images/utaustin-nir.png"
+  src="/images/utaustin-nir.webp"
   alt="False color NIR composite of UT Austin campus"
   style={{ width: '100%', maxHeight: '60vh', objectFit: 'contain', borderRadius: 6 }}
 />
@@ -393,7 +393,7 @@ Streaming COGs directly from Azure blob storage.
 <div>
 
 <Img
-  src="/images/utaustin-ndvi.png"
+  src="/images/utaustin-ndvi.webp"
   alt="NDVI map of UT Austin campus"
   style={{ width: '100%', maxHeight: '60vh', objectFit: 'contain', borderRadius: 6 }}
 />
@@ -415,7 +415,7 @@ this as a ratio: (NIR - Red) / (NIR + Red).
 <div>
 
 <Img
-  src="/images/utaustin-naip-rgb.png"
+  src="/images/utaustin-naip-rgb.webp"
   alt="NAIP aerial imagery of UT Austin campus at 1m resolution"
   style={{ width: '100%', maxHeight: '65vh', objectFit: 'contain', borderRadius: 6 }}
 />
@@ -426,7 +426,7 @@ this as a ratio: (NIR - Red) / (NIR + Red).
 <div>
 
 <Img
-  src="/images/utaustin-naip-ndvi.png"
+  src="/images/utaustin-naip-ndvi.webp"
   alt="NAIP NDVI of UT Austin"
   style={{ width: '100%', maxHeight: '65vh', objectFit: 'contain', borderRadius: 6 }}
 />
@@ -446,7 +446,7 @@ At 1m you can see individual trees and rooftops.
 
 ---
 
-<SectionSlide backgroundImage="/images/landsat-brown-2.jpg" kicker="Section 02">
+<SectionSlide backgroundImage="/images/landsat-brown-2.webp" kicker="Section 02">
 
 ## GeoAI — What's Out There
 
@@ -454,38 +454,29 @@ At 1m you can see individual trees and rooftops.
 
 ---
 
-# Foundation Models for Earth Observation
+# Generalist Geospatial Foundation Models
 
-<Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
-<div>
+Like pretraining LLMs on all internet text, the goal is to build a generalist geospatial model that can process all modalities and then either produce embeddings or be fine-tuned downstream.
 
-8 models, 3 paradigms, no single winner.
+**RGB, MSI, SAR, HSI, climate, weather, and more.**
 
-**MAE:** Prithvi 2.0, Clay, SatMAE, Scale-MAE, DOFA
+Prithvi, AlphaEarth, TESSERA, Clay, SeCo, and many more.
 
-**Contrastive:** SatCLIP, GeoCLIP
-
-**Temporal:** Presto — just 402K params
-
-Key finding: supervised baselines remain competitive on regional tasks (GEO-Bench 2024).
-
-<Img src="/images/arch-prithvi.png" alt="Prithvi 2.0 architecture" style={{ width: '100%', borderRadius: 6, marginTop: 16 }} />
-
+<div style={{ width: '100%', marginTop: 24 }}>
+  <div style={{ width: '72%', maxWidth: 820, margin: '0 auto' }}>
+    <Img
+      src="/images/arch-prithvi.webp"
+      alt="Prithvi 2.0 architecture"
+      style={{ width: '100%', display: 'block', borderRadius: 6 }}
+    />
+  </div>
 </div>
-<div>
-
-<Video src="/videos/S15_GeoFMComparison.mp4" title="Foundation Model Comparison" />
-
-</div>
-</Columns>
 
 <SpeakerNotes>
-The FM landscape is exploding. Key differentiator from natural image FMs:
-these understand multispectral bands, temporal sequences, and geographic context.
-Presto at 402K params vs Clay at 632M — 1500x difference — yet both competitive
-on different tasks. GEO-Bench shows no single model dominates.
-Prithvi: NASA/IBM, trained on Harmonized Landsat Sentinel (HLS) with temporal
-tubelet patching. Clay: Development Seed, uses DINOv2 teacher for distillation.
+The analogy is LLM pretraining, but for geospatial data. The point is not one
+specialized model per task — it is a generalist backbone that can handle many
+modalities and then get adapted downstream.
+Examples here are Prithvi, AlphaEarth, TESSERA, Clay, SeCo, and a lot more.
 </SpeakerNotes>
 
 ---
@@ -513,16 +504,24 @@ barriers as the top obstacles to operational deployment.
 <Columns cols={2} gap={4}>
 <div>
 
+<div style={{ textAlign: 'center' }}>
+
 **Contrastive Learning**
 
-<Video src="/videos/S08_ContrastiveLearning.mp4" title="Contrastive Learning on Satellite Tiles" />
+</div>
+
+<Video src="/videos/S08_ContrastiveLearning.webm" title="Contrastive Learning on Satellite Tiles" />
 
 </div>
 <div>
 
+<div style={{ textAlign: 'center' }}>
+
 **Masked Autoencoding**
 
-<Video src="/videos/S09_MAEMaskedModeling.mp4" title="Masked Autoencoder for Satellite Imagery" />
+</div>
+
+<Video src="/videos/S09_MAEMaskedModeling.webm" title="Masked Autoencoder for Satellite Imagery" />
 
 </div>
 </Columns>
@@ -540,23 +539,23 @@ encoder sees only visible 25%, decoder reconstructs the full image.
 
 # Pixel vs Patch Embeddings
 
-<Columns cols={2} gap={4} ratio="3fr 2fr">
-<div>
+<Columns cols={2} gap={4} align="center" ratio="3fr 2fr">
+<div style={{ fontSize: '0.01em', lineHeight: 0.8 }}>
 
-| | **Pixel Embedding** | **Patch Embedding** |
+| | **Patch Embedding** | **Pixel Embedding** |
 |---|---|---|
-| **Output shape** | One vector per pixel | One vector per patch (e.g. 16x16) |
-| **Spatial detail** | High — preserves pixel-level info | Compressed — summarizes patch |
-| **Best for** | Segmentation, change detection | Classification, retrieval, generation |
-| **Context window** | Narrow — local pixel neighborhood | Wide — entire patch context |
-| **Examples** | Presto, SatCLIP | SatMAE, Clay, DOFA, Prithvi |
+| **Output shape** | One vector per patch (e.g. 16x16) | One vector per pixel |
+| **Spatial detail** | Compressed — summarizes patch | High — preserves pixel-level info |
+| **Best for** | Classification, retrieval, generation | Segmentation, change detection |
+| **Context window** | Wide — entire patch context | Narrow — local pixel neighborhood |
+| **Examples** | SatMAE, Clay, DOFA, Prithvi | Presto, SatCLIP, AlphaEarth, TESSERA |
 
-> Most foundation models are moving toward **patch embeddings** with vision transformers — the spatial compression is worth the richer semantics.
+> Most foundation models are moving toward **pixel embeddings** with vision transformers — the spatial compression is worth the richer semantics.
 
 </div>
 <div>
 
-<Video src="/videos/S10_PixelVsPatchEmbedding.mp4" title="Pixel vs Patch Embeddings" />
+<Video src="/videos/S10_PixelVsPatchEmbedding.webm" title="Pixel vs Patch Embeddings" />
 
 </div>
 </Columns>
@@ -606,7 +605,7 @@ post-processing, productionization, serving — is 80% of the real work.
 
 ---
 
-<SectionSlide backgroundImage="/images/landsat-brown-3.jpg" kicker="Section 03">
+<SectionSlide backgroundImage="/images/landsat-brown-3.webp" kicker="Section 03">
 
 ## GeoAI Pipelines
 
@@ -624,33 +623,39 @@ post-processing, productionization, serving — is 80% of the real work.
 - Only samples where imagery + labels overlap
 - Handles CRS, resolution, alignment automatically
 
-<Video src="/videos/S03_TorchGeoSampling.mp4" title="TorchGeo GeoSampling" />
+<Video src="/videos/S03_TorchGeoSampling.webm" title="TorchGeo GeoSampling" />
 
 </div>
 <div>
 
+<div style={{ fontSize: '0.68em', lineHeight: 1.25 }}>
+
 ```python
-from torchgeo.datasets import (
-    Sentinel2, EnviroAtlas,
-)
-from torchgeo.samplers import (
-    RandomGeoSampler,
-)
+from torchgeo.datasets import Sentinel2, EnviroAtlas
+from torchgeo.samplers import RandomGeoSampler
 from torch.utils.data import DataLoader
 
-dataset = (
-    Sentinel2("data/")
-    & EnviroAtlas("labels/")
-)
+dataset = Sentinel2("data/") & EnviroAtlas("labels/")
 sampler = RandomGeoSampler(
-    dataset, size=256, length=1000,
+    dataset,
+    size=256,
+    length=1000,
 )
 dataloader = DataLoader(
     dataset,
     sampler=sampler,
     batch_size=16,
 )
+
+for batch in dataloader:
+    x, y = batch["image"], batch["mask"]
+    y_pred = model(x)
+    loss = criterion(y_pred, y)
+    loss.backward()
+    ...
 ```
+
+</div>
 
 </div>
 </Columns>
@@ -677,7 +682,7 @@ DataLoader — just with geospatial awareness built in.
 </div>
 <div>
 
-<Video src="/videos/S02_InferencePipeline.mp4" title="GeoAI Inference Pipeline" />
+<Video src="/videos/S02_InferencePipeline.webm" title="GeoAI Inference Pipeline" />
 
 </div>
 </Columns>
@@ -702,7 +707,7 @@ a model, and reassembled into a georeferenced output.
 </div>
 <div>
 
-<Video src="/videos/S04_EmbeddingRetrieval.mp4" title="Embedding Retrieval" />
+<Video src="/videos/S04_EmbeddingRetrieval.webm" title="Embedding Retrieval" />
 
 </div>
 </Columns>
@@ -715,66 +720,6 @@ then find nearest neighbors using Hamming distance.
 ---
 
 <Embed src="https://isaac.earth/terrabit" clip />
-
----
-
-# Fields of The World & PRUE
-
-<Columns cols={2} gap={5}>
-<div>
-
-**Fields of The World (FTW)**
-- Global field boundary benchmark
-- Diverse geographies and seasons
-- Standard evaluation for delineation models
-
-</div>
-<div>
-
-**PRUE** — our recipe for segmentation at scale
-- U-Net beats foundation models and instance methods
-- **76% IoU**, **47% object-F1** on FTW
-- +6% IoU, +9% F1 over previous baseline
-- Models released for 5 countries
-
-</div>
-</Columns>
-
-> I designed the processing pipeline — **global-scale predictions coming soon**
-
-<SpeakerNotes>
-PRUE evaluated 18 models under standardized conditions and found that a
-well-tuned U-Net with composite losses and targeted augmentations outperforms
-more complex approaches.
-</SpeakerNotes>
-
----
-
-<Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
-<div>
-
-## PRUE Pipeline
-
-- Sentinel-2 imagery → **256 px tiles**
-- U-Net segmentation → binary masks
-- Polygon merging across tile boundaries
-- **76% IoU**, **47% object-F1** on FTW
-- 18 models benchmarked, 5 countries released
-- Global-scale mosaic predictions coming soon
-
-</div>
-<div>
-
-<Video src="/videos/S11_PRUEPipeline.mp4" title="PRUE Field Boundary Pipeline" />
-
-</div>
-</Columns>
-
-<SpeakerNotes>
-The PRUE pipeline: Sentinel-2 imagery is tiled into 256px patches, processed
-through a U-Net, outputs merged into field boundary polygons, then mosaicked
-at global scale.
-</SpeakerNotes>
 
 ---
 
@@ -798,7 +743,7 @@ at global scale.
 </div>
 <div>
 
-<Video src="/videos/S13_ProductionPipeline.mp4" title="Production Pipeline — Post-processing & Productionization" />
+<Video src="/videos/S13_ProductionPipeline.webm" title="Production Pipeline — Post-processing & Productionization" />
 
 </div>
 </Columns>
@@ -814,27 +759,7 @@ partitioning, and finally serving as COG + PMTiles from cloud storage.
 
 ---
 
-<Embed src="https://fieldsofthe.world/ftw-inference-app/dev/" clip />
-
-<SpeakerNotes>
-This is our global field boundary prediction viewer — 2024 and 2025
-predictions from the PRUE pipeline, covering multiple countries.
-The predictions are served as PMTiles and COGs from cloud storage.
-</SpeakerNotes>
-
----
-
-<Embed src="https://isaac.earth/usda-csb/" title="USDA Crop Sequence Boundaries" clip />
-
-<SpeakerNotes>
-USDA Crop Sequence Boundaries — another example of field-level agricultural data
-at national scale. This tool lets you explore and download CSB data interactively.
-Built with MapLibre + PMTiles, served serverlessly from cloud storage.
-</SpeakerNotes>
-
----
-
-<SectionSlide backgroundImage="/images/landsat-brown-1.jpg" kicker="Section 04">
+<SectionSlide backgroundImage="/images/landsat-brown-1.webp" kicker="Section 04">
 
 ## Building with AI Agents
 
@@ -844,8 +769,8 @@ Built with MapLibre + PMTiles, served serverlessly from cloud storage.
 
 # What I've Built with AI Coding Agents
 
-- **geospatialml.com** — blog for Caleb Robinson, built entirely with Claude
-- **isaac.earth/terrabit** — binary embedding retrieval, full frontend in ~3 days
+- **geospatialml.com** — blog with Caleb Robinson, built entirely with Claude
+- **isaac.earth/terrabit** — binary embedding retrieval, full frontend in ~2 days
 - **This presentation** — slides, Manim animations, deployment
 - **TorchGeo / SMP** — dataset wrappers, fixes, docs
 
@@ -881,7 +806,7 @@ Built the extension in a weekend with Claude Code.
 <div>
 
 <Img
-  src="/images/pc-mcp-marketplace.png"
+  src="/images/pc-mcp-marketplace.webp"
   alt="Planetary Computer MCP - VS Code Marketplace"
   style={{ width: '100%', borderRadius: 8, border: '1px solid rgba(244,244,235,0.1)' }}
 />
@@ -912,13 +837,13 @@ Fork → rename → start experimenting.
 - **GitHub Actions CI** — tests on every push
 - **Hydra** configs + **W&B** logging
 - **LaTeX paper** + **slides** template folders — let Claude scaffold drafts, then review manually
-- Nobody should spend hours making update slides anymore
+- **Nobody should spend hours making update slides anymore**
 
 </div>
 <div>
 
 <Img
-  src="/images/research-repo-github.png"
+  src="/images/research-repo-github.webp"
   alt="Research Repo Template - GitHub"
   style={{ width: '100%', borderRadius: 8, border: '1px solid rgba(244,244,235,0.1)' }}
 />
@@ -936,7 +861,17 @@ review manually. Fork it and go.
 
 ---
 
-<SectionSlide backgroundImage="/images/landsat-brown-2.jpg" kicker="Section 05">
+<Embed src="https://isaac.earth/usda-csb/" title="USDA Crop Sequence Boundaries" clip />
+
+<SpeakerNotes>
+USDA Crop Sequence Boundaries — another example of field-level agricultural data
+at national scale. This tool lets you explore and download CSB data interactively.
+Built with MapLibre + PMTiles, served serverlessly from cloud storage.
+</SpeakerNotes>
+
+---
+
+<SectionSlide backgroundImage="/images/landsat-brown-2.webp" kicker="Section 05">
 
 ## The Bigger Picture
 
@@ -961,7 +896,7 @@ review manually. Fork it and go.
 </div>
 <div>
 
-<Video src="/videos/S16_Flywheel.mp4" title="The GeoAI Flywheel" />
+<Video src="/videos/S16_Flywheel.webm" title="The GeoAI Flywheel" />
 
 </div>
 </Columns>
@@ -1005,18 +940,14 @@ open-source and accessible.
 
 # Resources & Links
 
-<QRGrid items={[
+<QRGrid layout="row" size={220} items={[
   { url: "https://isaac.earth", label: "isaac.earth" },
   { url: "https://github.com/isaaccorley", label: "GitHub" },
-  { url: "https://marketplace.visualstudio.com/items?itemName=IsaacCorley.planetary-computer-mcp", label: "PC MCP Extension" },
-  { url: "https://github.com/isaaccorley/research-repo-template", label: "Research Template" },
-  { url: "https://geospatialml.substack.com/subscribe", label: "Subscribe" },
+  { url: "https://geospatialml.substack.com/subscribe", label: "Subscribe to my Blog" },
 ]} />
 
 <SpeakerNotes>
-Scan these QR codes to find my projects. The PC MCP extension is on the
-VS Code Marketplace. The research template is on GitHub — fork and go.
-geospatialml.com is where I write about cloud-native geo and GeoAI.
+Scan these QR codes to find my projects. geospatialml.com is where I write about cloud-native geo and GeoAI.
 </SpeakerNotes>
 
 ---

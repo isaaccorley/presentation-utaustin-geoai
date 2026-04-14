@@ -1,29 +1,7 @@
 {
   "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
-  "organizeImports": {
-    "enabled": true
-  },
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "recommended": true,
-      "complexity": {
-        "noForEach": "off"
-      },
-      "suspicious": {
-        "noExplicitAny": "warn",
-        "noArrayIndexKey": "warn"
-      },
-      "style": {
-        "noNonNullAssertion": "warn",
-        "useConst": "error"
-      },
-      "correctness": {
-        "noUnusedImports": "error",
-        "noUnusedVariables": "warn",
-        "useExhaustiveDependencies": "warn"
-      }
-    }
+  "files": {
+    "ignore": ["node_modules", ".next", "out", "*.mdx", "public", ".venv", "media", "video"]
   },
   "formatter": {
     "enabled": true,
@@ -38,7 +16,29 @@
       "trailingCommas": "all"
     }
   },
-  "files": {
-    "ignore": ["node_modules", ".next", "out", "*.mdx", "public"]
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "complexity": {
+        "noForEach": "off"
+      },
+      "correctness": {
+        "noUnusedImports": "error",
+        "noUnusedVariables": "warn",
+        "useExhaustiveDependencies": "warn"
+      },
+      "recommended": true,
+      "style": {
+        "noNonNullAssertion": "warn",
+        "useConst": "error"
+      },
+      "suspicious": {
+        "noArrayIndexKey": "warn",
+        "noExplicitAny": "warn"
+      }
+    }
+  },
+  "organizeImports": {
+    "enabled": true
   }
 }

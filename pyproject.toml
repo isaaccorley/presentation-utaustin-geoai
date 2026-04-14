@@ -1,0 +1,45 @@
+[build-system]
+build-backend = "uv_build"
+requires = [ "uv-build>=0.9.3,<1" ]
+
+[project]
+name = "presentation-utaustin-geoai"
+version = "0.1.0"
+description = "UT Austin GeoAI talk deck and Manim scenes."
+readme = "README.md"
+authors = [ { name = "Isaac Corley", email = "isaac.a.corley@gmail.com" } ]
+requires-python = ">=3.13"
+classifiers = [
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+  "dask>=2024.12",
+  "gcsfs>=2024.12",
+  "manim>=0.20.1,<0.21",
+  "numpy>=1.26,<3",
+  "odc-stac>=0.3.6",
+  "planetary-computer>=1",
+  "pystac-client>=0.8",
+  "xarray>=2024.10",
+  "zarr>=3",
+]
+
+[dependency-groups]
+dev = [
+  "pre-commit>=4.3",
+  "ruff>=0.14.1",
+  "ty>=0.0.1a23",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+force-exclude = true
+lint.select = [ "B", "C4", "E", "F", "I", "PERF", "PIE", "RUF", "SIM", "UP", "W" ]
+lint.ignore = [ "E501", "RUF002" ]
+lint.isort.known-first-party = [ "scenes", "_theme" ]
