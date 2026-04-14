@@ -1,4 +1,5 @@
 /** @jsxImportSource theme-ui */
+import type { ReactNode } from 'react';
 import { useColorMode } from 'theme-ui';
 
 export interface TitleSlideProps {
@@ -10,6 +11,8 @@ export interface TitleSlideProps {
   author?: string;
   /** Presentation date */
   date?: string;
+  /** Optional content shown below the title block */
+  children?: ReactNode;
 }
 
 const GRADIENT_DARK = 'linear-gradient(261deg, #ff4f2c 0%, #80a0d8 100%)';
@@ -19,7 +22,7 @@ const GRADIENT_LIGHT = 'linear-gradient(261deg, #e0401f 0%, #5a7ab8 100%)';
  * Cover/title slide with logo, title, subtitle, author, and date.
  * The title text uses the TG brand gradient as a text fill.
  */
-export function TitleSlide({ title, subtitle, author, date }: TitleSlideProps) {
+export function TitleSlide({ title, subtitle, author, date, children }: TitleSlideProps) {
   const [colorMode] = useColorMode();
   const gradient = colorMode === 'light' ? GRADIENT_LIGHT : GRADIENT_DARK;
 
@@ -59,6 +62,8 @@ export function TitleSlide({ title, subtitle, author, date }: TitleSlideProps) {
         {author && date && <span sx={{ color: 'border' }}>|</span>}
         {date && <span>{date}</span>}
       </div>
+
+      {children && <div sx={{ width: '100%', mt: 5 }}>{children}</div>}
     </div>
   );
 }
