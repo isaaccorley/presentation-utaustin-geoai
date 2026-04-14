@@ -506,17 +506,6 @@ barriers as the top obstacles to operational deployment.
 
 <div style={{ textAlign: 'center' }}>
 
-**Contrastive Learning**
-
-</div>
-
-<Video src="/videos/S08_ContrastiveLearning.webm" title="Contrastive Learning on Satellite Tiles" />
-
-</div>
-<div>
-
-<div style={{ textAlign: 'center' }}>
-
 **Masked Autoencoding**
 
 </div>
@@ -524,15 +513,26 @@ barriers as the top obstacles to operational deployment.
 <Video src="/videos/S09_MAEMaskedModeling.webm" title="Masked Autoencoder for Satellite Imagery" />
 
 </div>
+<div>
+
+<div style={{ textAlign: 'center' }}>
+
+**Contrastive Learning**
+
+</div>
+
+<Video src="/videos/S08_ContrastiveLearning.webm" title="Contrastive Learning on Satellite Tiles" />
+
+</div>
 </Columns>
 
 <SpeakerNotes>
-Contrastive learning learns what makes tiles similar or different.
-MAE learns spatial structure by predicting missing patches. They produce
-different kinds of features — contrastive for retrieval, MAE for dense prediction.
-Two augmented views of the same satellite tile get encoded; embeddings pulled
-together, different tiles pushed apart. For MAE, 75% of patches are masked;
-encoder sees only visible 25%, decoder reconstructs the full image.
+MAE learns spatial structure by predicting missing patches. Contrastive learning
+learns what makes tiles similar or different. They produce different kinds of
+features — MAE for dense prediction, contrastive for retrieval.
+For MAE, 75% of patches are masked; encoder sees only visible 25%, decoder
+reconstructs the full image. Two augmented views of the same satellite tile get
+encoded; embeddings pulled together, different tiles pushed apart.
 </SpeakerNotes>
 
 ---
@@ -767,27 +767,6 @@ partitioning, and finally serving as COG + PMTiles from cloud storage.
 
 ---
 
-# What I've Built with AI Coding Agents
-
-- **geospatialml.com** — blog with Caleb Robinson, built entirely with Claude
-- **isaac.earth/terrabit** — binary embedding retrieval, full frontend in ~2 days
-- **This presentation** — slides, Manim animations, deployment
-- **TorchGeo / SMP** — dataset wrappers, fixes, docs
-
-> Domain expertise + AI execution = force multiplier
-
-<SpeakerNotes>
-AI agents don't replace domain expertise, they amplify it. I still need to
-know what COGs are, how STAC works, what TorchGeo does. But I no longer
-hand-write every MapLibre callback or CSS grid layout.
-</SpeakerNotes>
-
----
-
-<Embed src="https://geospatialml.com" clip />
-
----
-
 # Planetary Computer MCP
 
 <Columns cols={2} gap={4} align="center" ratio="2fr 3fr">
@@ -819,6 +798,35 @@ The Model Context Protocol lets AI coding agents connect to external tools.
 This extension gives Claude direct access to the Planetary Computer STAC API —
 it can search, browse, and generate pipelines without leaving VS Code.
 </SpeakerNotes>
+
+---
+
+<Embed src="https://fieldsofthe.world/ftw-inference-app/dev/" title="FTW Inference App" clip />
+
+<SpeakerNotes>
+FieldsofThe.World inference app — a full-page web embed for the talk deck.
+</SpeakerNotes>
+
+---
+
+# What I've Built with AI Coding Agents
+
+- **geospatialml.com** — blog with Caleb Robinson, built entirely with Claude
+- **isaac.earth/terrabit** — binary embedding retrieval, full frontend in ~2 days
+- **This presentation** — slides, Manim animations, deployment
+- **TorchGeo / SMP** — dataset wrappers, fixes, docs
+
+> Domain expertise + AI execution = force multiplier
+
+<SpeakerNotes>
+AI agents don't replace domain expertise, they amplify it. I still need to
+know what COGs are, how STAC works, what TorchGeo does. But I no longer
+hand-write every MapLibre callback or CSS grid layout.
+</SpeakerNotes>
+
+---
+
+<Embed src="https://geospatialml.com" clip />
 
 ---
 
