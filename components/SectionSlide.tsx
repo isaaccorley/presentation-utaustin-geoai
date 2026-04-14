@@ -40,7 +40,7 @@ export function SectionSlide({
         height: '100%',
         position: 'relative',
         '& > *:not([aria-hidden]):not([data-kicker])': {
-          fontSize: [6, 7, 8],
+          fontSize: 8,
           lineHeight: 'tight',
           fontWeight: 'bold',
           maxWidth: '80%',

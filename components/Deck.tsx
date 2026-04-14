@@ -343,6 +343,35 @@ export function Deck({ children }: DeckProps) {
   // Render
   // -----------------------------------------------------------------------
 
+  if (isMobileViewport) {
+    return (
+      <div
+        sx={{
+          width: '100vw',
+          height: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          px: 5,
+          bg: 'background',
+          color: 'text',
+        }}
+      >
+        <div
+          sx={{
+            maxWidth: 640,
+            textAlign: 'center',
+          }}
+        >
+          <h1 sx={{ fontSize: [6, 7], mb: 4 }}>Desktop only</h1>
+          <p sx={{ fontSize: [3, 4], color: 'textSecondary', m: 0 }}>
+            This deck is optimized for desktop screens. Open it on a laptop or monitor.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   // Print mode: render all slides vertically (no Slide wrapper, no nav)
   if (printMode) {
     return (
@@ -393,7 +422,6 @@ export function Deck({ children }: DeckProps) {
         total={totalSlides}
         onPrev={() => goToSlide(Math.max(currentSlide - 1, 0))}
         onNext={() => goToSlide(Math.min(currentSlide + 1, totalSlides - 1))}
-        isMobile={isMobileViewport}
         hidden={CHROME_HIDDEN_TYPES.has(slideType ?? '')}
       />
     </div>

@@ -40,7 +40,7 @@ export function TitleSlide({ title, subtitle, author, date, children }: TitleSli
     >
       <h1
         sx={{
-          fontSize: [6, 8],
+          fontSize: 8,
           fontWeight: 'bold',
           lineHeight: 'tight',
           m: 0,
@@ -54,14 +54,10 @@ export function TitleSlide({ title, subtitle, author, date, children }: TitleSli
       </h1>
 
       {subtitle && (
-        <p sx={{ fontSize: [3, 4], color: 'textSecondary', m: 0, fontWeight: 'medium' }}>
-          {subtitle}
-        </p>
+        <p sx={{ fontSize: 4, color: 'textSecondary', m: 0, fontWeight: 'medium' }}>{subtitle}</p>
       )}
 
-      <div
-        sx={{ display: 'flex', gap: 3, alignItems: 'center', color: 'textMuted', fontSize: [1, 2] }}
-      >
+      <div sx={{ display: 'flex', gap: 3, alignItems: 'center', color: 'textMuted', fontSize: 2 }}>
         {author && <span>{author}</span>}
         {author && date && <span sx={{ color: 'border' }}>|</span>}
         {date && <span>{date}</span>}

@@ -10,8 +10,6 @@ export interface SlideNavProps {
   onPrev: () => void;
   /** Go to next slide */
   onNext: () => void;
-  /** Whether the viewport is narrow enough to use mobile controls */
-  isMobile?: boolean;
   /** When true, nav is completely hidden (cover/section/close slides) */
   hidden?: boolean;
 }
@@ -20,21 +18,14 @@ export interface SlideNavProps {
  * Minimal slide counter fixed to the bottom-right.
  * Hidden on cover, section, and closing slides.
  */
-export function SlideNav({
-  current,
-  total,
-  onPrev,
-  onNext,
-  isMobile = false,
-  hidden = false,
-}: SlideNavProps) {
+export function SlideNav({ current, total, onPrev, onNext, hidden = false }: SlideNavProps) {
   const [colorMode, setColorMode] = useColorMode();
 
   const toggleMode = () => {
     setColorMode(colorMode === 'light' ? 'dark' : 'light');
   };
 
-  if (hidden && !isMobile) return null;
+  if (hidden) return null;
 
   return (
     <div
@@ -56,16 +47,6 @@ export function SlideNav({
         opacity: 0.5,
         transition: 'opacity 0.2s ease',
         '&:hover': {
-          opacity: 1,
-        },
-        '@media (max-width: 767px)': {
-          left: 12,
-          right: 12,
-          bottom: 12,
-          justifyContent: 'space-between',
-          bg: 'rgba(27, 24, 21, 0.72)',
-          backdropFilter: 'blur(12px)',
-          borderRadius: 9999,
           opacity: 1,
         },
         '@media print': {

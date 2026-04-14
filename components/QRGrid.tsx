@@ -53,11 +53,11 @@ export function QRGrid({ items, layout = 'auto', size = 200 }: QRGridProps) {
         sx={{
           display: 'flex',
           flexDirection: 'row',
-          alignItems: 'flex-start',
+          alignItems: 'center',
           justifyContent: 'center',
           py: 4,
-          flexWrap: ['wrap', 'nowrap'],
-          gap: [4, 5],
+          flexWrap: 'nowrap',
+          gap: 5,
         }}
       >
         {items.map((item) => (

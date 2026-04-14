@@ -27,7 +27,7 @@ export function Video({ src, poster, autoPlay = true, loop = true, title }: Vide
       sx={{
         width: '100%',
         height: 'auto',
-        maxHeight: ['42vh', '82vh'],
+        maxHeight: '82vh',
         borderRadius: 6,
         objectFit: 'contain',
         bg: 'background',
